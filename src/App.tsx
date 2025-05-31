@@ -39,7 +39,9 @@ function App() {
       <h1 className="text-4xl font-bold mb-8 text-center">AmbientFlow</h1>
 
       <div className="text-center mb-6">
-        <p className="text-gray-400">再生中: {playingSounds.length} 個の音源</p>
+        <p className="text-gray-400" data-testid="playing-count">
+          再生中: {playingSounds.length} 個の音源
+        </p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
@@ -50,6 +52,7 @@ function App() {
           return (
             <div
               key={source.id}
+              data-testid={`sound-${source.id}`}
               className={`
                 p-4 rounded-lg border-2 transition-all duration-300 cursor-pointer
                 ${
@@ -83,6 +86,7 @@ function App() {
                   min="0"
                   max="100"
                   value={volume}
+                  data-testid={`volume-${source.id}`}
                   onChange={(e) =>
                     handleVolumeChange(source.id, Number(e.target.value))
                   }
@@ -93,7 +97,10 @@ function App() {
                       : undefined,
                   }}
                 />
-                <div className="text-center text-xs text-gray-400 mt-1">
+                <div
+                  className="text-center text-xs text-gray-400 mt-1"
+                  data-testid={`volume-display-${source.id}`}
+                >
                   {volume}%
                 </div>
               </div>
