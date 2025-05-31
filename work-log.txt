@@ -223,3 +223,46 @@ Issue #4「Setup: React 19 + TypeScript 5.8環境構築」を完了しました�
 
 ### 次のステップ
 Issue #5「Howler.jsを使用した音声再生基盤」または Issue #6「環境音ソースの定義とアセット準備」に進む
+
+## 2025/05/31 - Issue #11: Rustコードの自動フォーマット・Lintチェック完了
+
+### 実施内容
+Issue #11「Setup: Rustコードの自動フォーマット・Lintチェック」を完了しました。
+
+### 作業内容
+1. **rustfmtの設定**
+   - src-tauri/rustfmt.tomlを作成
+   - 安定版のみの設定に調整（nightly featuresを除外）
+   - 基本的なフォーマット設定を定義
+
+2. **clippyの設定**
+   - src-tauri/clippy.tomlを作成
+   - Cargo.tomlに[lints.clippy]セクションを追加
+   - pedantic、nurseryレベルの警告を有効化
+
+3. **pre-commitフックの拡張**
+   - lint-stagedにRustファイル設定を追加
+   - package.jsonにRust用スクリプトを追加：
+     - rust:fmt - Rustフォーマット実行
+     - rust:fmt:check - Rustフォーマットチェック
+     - rust:clippy - Rustコード品質チェック
+     - rust:check - Rustコンパイルチェック
+
+4. **ドキュメント更新**
+   - CLAUDE.mdにRustコード品質管理のセクションを追加
+   - pre-commitフックの説明を更新
+
+### 動作確認
+- `pnpm rust:fmt` - Rustコードの自動フォーマットが正常動作
+- `pnpm rust:fmt:check` - フォーマットチェックが正常動作
+- コミット時にRustファイルも自動的にフォーマット・Lintチェックが実行される
+
+### 作成・更新したファイル
+- src-tauri/rustfmt.toml
+- src-tauri/clippy.toml
+- src-tauri/Cargo.toml（lints設定追加）
+- package.json（Rust用スクリプト追加、lint-staged設定更新）
+- CLAUDE.md（Rustコード品質管理ドキュメント追加）
+
+### 次のステップ
+Issue #5「Howler.jsを使用した音声再生基盤」または Issue #6「環境音ソースの定義とアセット準備」に進む

@@ -106,27 +106,35 @@ src-tauri/
 
 コミット前に自動的にlintとformatが実行されます：
 
+**フロントエンド (TypeScript/JavaScript)**
+
 - **ESLint**: JavaScriptとTypeScriptのコード品質チェック
 - **Prettier**: コードフォーマットの統一
+
+**Rust (src-tauri)**
+
+- **rustfmt**: Rustコードの自動フォーマット
+- **clippy**: Rustコードの静的解析とLint
+
+**ツール管理**
+
 - **husky + lint-staged**: pre-commitフックの管理
 
 設定済みのコマンド：
 
 ```bash
-# フォーマットチェック
-pnpm format:check
+# TypeScript/JavaScript
+pnpm format:check       # フォーマットチェック
+pnpm format             # フォーマット実行
+pnpm lint               # Lintチェック
+pnpm lint:fix           # Lint自動修正
+pnpm typecheck          # 型チェック
 
-# フォーマット実行
-pnpm format
-
-# Lintチェック
-pnpm lint
-
-# Lint自動修正
-pnpm lint:fix
-
-# 型チェック
-pnpm typecheck
+# Rust
+pnpm rust:fmt           # Rustフォーマット実行
+pnpm rust:fmt:check     # Rustフォーマットチェック
+pnpm rust:clippy        # Rustコード品質チェック
+pnpm rust:check         # Rustコンパイルチェック
 ```
 
 **重要**: コミット前にこれらのチェックが自動実行されるため、エラーがある場合はコミットできません。
