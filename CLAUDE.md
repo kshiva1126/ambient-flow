@@ -36,6 +36,7 @@ pnpm tauri build        # Build Tauri app for distribution
 ## Architecture
 
 ### Directory Structure (Planned)
+
 ```
 src/
 ├── components/         # React components
@@ -55,6 +56,7 @@ src-tauri/
 ```
 
 ### Core Features
+
 - 14 ambient sound sources (rain, waves, fireplace, etc.)
 - Individual volume controls (0-100%)
 - Preset save/load functionality
@@ -62,6 +64,7 @@ src-tauri/
 - 1200x800px fixed window size
 
 ### Performance Requirements
+
 - CPU usage: <5% during playback
 - Memory usage: <150MB
 - UI response time: <100ms
@@ -85,15 +88,48 @@ src-tauri/
 ## Development Guidelines
 
 ### 開発方針
+
 - プロジェクトの開発方針に関わる決定事項はすべてCLAUDE.mdに記載する
 - 新しい技術選定や設計決定を行った場合は即座に文書化する
 - チーム開発を想定し、明確で一貫性のあるガイドラインを維持する
 
 ### コーディング規約
+
 - TypeScriptの厳格な型チェックを有効化（strict: true）
 - ESLintとPrettierによる自動フォーマット
 - コンポーネントは関数型で実装
 - カスタムフックによるロジックの分離
+
+### コード品質管理
+
+#### Pre-commit フック
+
+コミット前に自動的にlintとformatが実行されます：
+
+- **ESLint**: JavaScriptとTypeScriptのコード品質チェック
+- **Prettier**: コードフォーマットの統一
+- **husky + lint-staged**: pre-commitフックの管理
+
+設定済みのコマンド：
+
+```bash
+# フォーマットチェック
+pnpm format:check
+
+# フォーマット実行
+pnpm format
+
+# Lintチェック
+pnpm lint
+
+# Lint自動修正
+pnpm lint:fix
+
+# 型チェック
+pnpm typecheck
+```
+
+**重要**: コミット前にこれらのチェックが自動実行されるため、エラーがある場合はコミットできません。
 
 ## Issue Management
 
@@ -119,12 +155,14 @@ gh issue reopen <issue番号> --repo kshiva1126/ambient-flow
 作業状況はステータスラベルとアサインの組み合わせで管理します：
 
 #### ステータスラベル
+
 - `status: todo` - 未着手（黄色）
 - `status: in progress` - 作業中（オレンジ）
 - `status: review` - レビュー待ち（緑）
 - `status: done` - 完了（青）
 
 #### 管理方法
+
 ```bash
 # 作業開始時：自分にアサイン＋作業中ラベル
 gh issue edit <issue番号> --add-assignee @me --add-label "status: in progress" --repo kshiva1126/ambient-flow
@@ -145,6 +183,7 @@ gh issue list --assignee @me --label "status: in progress" --repo kshiva1126/amb
 作業内容は`work-log.txt`に記録します。すべての作業（issue対応、環境構築、実装、バグ修正など）を都度追記してください。
 
 記載内容の例：
+
 - 日付とタイトル
 - 実施した作業の詳細
 - 使用したコマンド
@@ -154,6 +193,7 @@ gh issue list --assignee @me --label "status: in progress" --repo kshiva1126/amb
 ## Git管理
 
 ### コミット&プッシュのタイミング
+
 以下のタイミングで適度にコミット&プッシュを行ってください：
 
 - 機能の実装が一段落したとき
@@ -163,6 +203,7 @@ gh issue list --assignee @me --label "status: in progress" --repo kshiva1126/amb
 - issue対応が完了したとき
 
 ### ブランチ運用
+
 ```bash
 # issue対応開始時：featureブランチを作成
 git checkout -b feature/issue-<issue番号>-<簡潔な説明>
@@ -173,6 +214,7 @@ gh pr create --title "タイトル" --body "本文"
 ```
 
 ### ブランチ命名規則
+
 - `feature/*` - 新機能開発
 - `fix/*` - バグ修正
 - `docs/*` - ドキュメント更新
