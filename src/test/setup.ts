@@ -24,7 +24,8 @@ vi.mock('howler', () => ({
 }))
 
 // Mock console methods to avoid noise in test output
-global.console = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+;(globalThis as any).console = {
   ...console,
   error: vi.fn(),
   warn: vi.fn(),
