@@ -1,25 +1,23 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useAudioManager } from './useAudioManager'
-import { audioManager } from '../services/AudioManager'
+import * as audioManager from '../services/AudioManager'
 import type { SoundSource } from '../types/sound'
 
 // Mock the AudioManager module
 vi.mock('../services/AudioManager', () => ({
-  audioManager: {
-    load: vi.fn(),
-    play: vi.fn(),
-    stop: vi.fn(),
-    setVolume: vi.fn(),
-    fadeIn: vi.fn(),
-    fadeOut: vi.fn(),
-    stopAll: vi.fn(),
-    isPlaying: vi.fn(),
-    getVolume: vi.fn(),
-    unload: vi.fn(),
-    unloadUnused: vi.fn(),
-    getPlayingSounds: vi.fn().mockReturnValue([]),
-  },
+  load: vi.fn(),
+  play: vi.fn(),
+  stop: vi.fn(),
+  setVolume: vi.fn(),
+  fadeIn: vi.fn(),
+  fadeOut: vi.fn(),
+  stopAll: vi.fn(),
+  isPlaying: vi.fn(),
+  getVolume: vi.fn(),
+  unload: vi.fn(),
+  unloadUnused: vi.fn(),
+  getPlayingSounds: vi.fn().mockReturnValue([]),
 }))
 
 const mockSoundSource: SoundSource = {
