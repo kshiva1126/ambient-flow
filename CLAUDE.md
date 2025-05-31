@@ -101,6 +101,32 @@ gh issue close <issue番号> --repo kshiva1126/ambient-flow
 gh issue reopen <issue番号> --repo kshiva1126/ambient-flow
 ```
 
+### ステータス管理（ラベル＋アサイン方式）
+
+作業状況はステータスラベルとアサインの組み合わせで管理します：
+
+#### ステータスラベル
+- `status: todo` - 未着手（黄色）
+- `status: in progress` - 作業中（オレンジ）
+- `status: review` - レビュー待ち（緑）
+- `status: done` - 完了（青）
+
+#### 管理方法
+```bash
+# 作業開始時：自分にアサイン＋作業中ラベル
+gh issue edit <issue番号> --add-assignee @me --add-label "status: in progress" --repo kshiva1126/ambient-flow
+
+# レビュー待ち状態に変更
+gh issue edit <issue番号> --remove-label "status: in progress" --add-label "status: review" --repo kshiva1126/ambient-flow
+
+# 作業完了時：完了ラベルに変更（アサインは維持）
+gh issue edit <issue番号> --remove-label "status: review" --add-label "status: done" --repo kshiva1126/ambient-flow
+
+# ステータス別にissueを確認
+gh issue list --label "status: in progress" --repo kshiva1126/ambient-flow
+gh issue list --assignee @me --label "status: in progress" --repo kshiva1126/ambient-flow
+```
+
 ## Work Log
 
 作業内容は`work-log.txt`に記録します。すべての作業（issue対応、環境構築、実装、バグ修正など）を都度追記してください。
@@ -111,3 +137,24 @@ gh issue reopen <issue番号> --repo kshiva1126/ambient-flow
 - 使用したコマンド
 - 発生した問題と解決方法
 - 作成・更新したファイル
+
+## Git管理
+
+### コミット&プッシュのタイミング
+以下のタイミングで適度にコミット&プッシュを行ってください：
+
+- 機能の実装が一段落したとき
+- ドキュメントの更新が完了したとき
+- 設定ファイルの重要な変更を行ったとき
+- 作業を中断・終了するとき
+- issue対応が完了したとき
+
+### ブランチ運用
+```bash
+# issue対応開始時：専用ブランチを作成
+git checkout -b issue-<issue番号>-<簡潔な説明>
+# 例: git checkout -b issue-3-tauri-setup
+
+# 作業完了後：プルリクエストを作成
+gh pr create --title "タイトル" --body "本文"
+```

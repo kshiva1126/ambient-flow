@@ -1,32 +1,66 @@
 # AmbientFlow 作業ログ
 
-## 2025-05-31
+## 2025/05/31 - ステータス管理用ラベルの作成
 
-### GitHub Issues作成
-- ambient-flowリポジトリでGitHub Issuesによる課題管理の設定を確認
-- テスト用issue作成: #2「Phase 1: 基本的な音声再生機能の実装」
+### 実施内容
+GitHubのissue管理をより効率的に行うため、ステータス管理用のラベルを作成しました。
 
-### CLAUDE.mdの更新
-- Issue管理セクションを追加
-- ghコマンドによるissue操作方法を記載
-  - issue一覧表示: `gh issue list --repo kshiva1126/ambient-flow`
-  - issue作成: `gh issue create --repo kshiva1126/ambient-flow --title "タイトル" --body "本文"`
-  - issue詳細表示: `gh issue view <issue番号> --repo kshiva1126/ambient-flow`
-  - issueのステータス更新: `gh issue close/reopen <issue番号> --repo kshiva1126/ambient-flow`
+### 作成したラベル
+1. `status: todo` - 未着手（黄色: #E4E669）
+2. `status: in progress` - 作業中（オレンジ: #FBCA04）
+3. `status: review` - レビュー待ち（緑: #0E8A16）
+4. `status: done` - 完了（青: #0075CA）
 
-### Phase 1の詳細化
-- Phase 1を6つの詳細なissueに分割:
-  - #3: Setup: Tauri v2.xプロジェクトの初期化
-  - #4: Setup: React 19 + TypeScript 5.8環境構築
-  - #5: Feature: Howler.jsを使用した音声再生基盤
-  - #6: Feature: 環境音ソースの定義とアセット準備
-  - #7: UI: 音源コントロールコンポーネント
-  - #8: Feature: Zustand状態管理の実装
+### 使用したコマンド
+```bash
+# ラベルの作成
+gh label create "status: todo" --description "未着手" --color "E4E669" --repo kshiva1126/ambient-flow
+gh label create "status: in progress" --description "作業中" --color "FBCA04" --repo kshiva1126/ambient-flow
+gh label create "status: review" --description "レビュー待ち" --color "0E8A16" --repo kshiva1126/ambient-flow
+gh label create "status: done" --description "完了" --color "0075CA" --repo kshiva1126/ambient-flow
 
-### Issue #3の作業開始
-- Rustのインストール完了 (rustc 1.87.0)
-- Tauri CLI v2.xのインストール試行中（中断）
+# issue #3に作業中ラベルを追加
+gh issue edit 3 --add-label "status: in progress" --repo kshiva1126/ambient-flow
+```
 
-### CLAUDE.mdの更新（Work Logセクション追加）
-- work-log.txtへの作業記録について記載
-- 記載内容の例を追加（日付、作業詳細、コマンド、問題と解決方法、ファイル更新）
+### 更新したファイル
+- `CLAUDE.md` - ステータス管理セクションを更新し、ラベルによる管理方法を追加
+- `work-log.txt` - 本ファイルを新規作成
+
+### 今後の作業
+現在、issue #3（プロジェクトセットアップ）が作業中ステータスになっているので、このissueに従ってプロジェクトの初期セットアップを進めていきます。
+
+## 2025/05/31 - ステータス管理方法の更新
+
+### 実施内容
+CLAUDE.mdのステータス管理セクションを「ラベル＋アサイン方式」に更新しました。
+
+### 変更内容
+- アサインは作業完了後も維持する方針に変更
+- ステータスラベルで進捗状況を管理
+- 管理フロー：
+  - 作業開始: 自分にアサイン＋`status: in progress`ラベル
+  - レビュー待ち: `status: review`ラベルに変更
+  - 完了時: `status: done`ラベルに変更（アサインは維持）
+
+### 更新したファイル
+- `CLAUDE.md` - ステータス管理セクションを「ラベル＋アサイン方式」に更新
+
+## 2025/05/31 - Git管理セクションの追加
+
+### 実施内容
+CLAUDE.mdにGit管理セクションを追加し、コミット&プッシュのガイドラインを記載しました。
+
+### 追加内容
+- コミット&プッシュの適切なタイミング
+  - 機能実装の一段落時
+  - ドキュメント更新完了時
+  - 設定ファイルの重要変更時
+  - 作業中断・終了時
+  - issue対応完了時
+- ブランチ運用ルール
+  - issue対応時は専用ブランチ作成: `issue-<番号>-<説明>`
+  - 完了後はプルリクエスト作成
+
+### 更新したファイル
+- `CLAUDE.md` - Git管理セクションを追加
