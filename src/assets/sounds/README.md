@@ -4,48 +4,39 @@
 
 ## ファイル形式
 
-- 形式: MP3またはOGG
+- 形式: MP3
 - ビットレート: 128-192kbps（ファイルサイズと品質のバランス）
 - ループ: シームレスループ対応
 
-## 必要な音源ファイル
+## 音源ファイル一覧
+
+### 自然音
 
 - rain.mp3 - 雨音
 - waves.mp3 - 波音
-- forest.mp3 - 森の環境音
+- stream.mp3 - 小川のせせらぎ
 - birds.mp3 - 鳥のさえずり
-- thunder.mp3 - 雷鳴
+- thunder.mp3 - 雷雨と嵐
 - wind.mp3 - 風の音
+- summer-night.mp3 - 夏の夜（虫の音）
+
+### 室内音
+
 - fireplace.mp3 - 暖炉の炎の音
-- clock.mp3 - 時計の針音
-- keyboard.mp3 - キーボードのタイピング音
+
+### 都市音
+
 - cafe.mp3 - カフェの環境音
 - city.mp3 - 都市の環境音
 - train.mp3 - 電車の走行音
+- boat.mp3 - ボートのエンジン音
+
+### ノイズ
+
 - white-noise.mp3 - ホワイトノイズ
+- pink-noise.mp3 - ピンクノイズ
 - brown-noise.mp3 - ブラウンノイズ
-
-## 音源の入手方法
-
-### 開発用プレースホルダー
-
-開発中は以下の方法で仮の音源を生成できます：
-
-```bash
-# ffmpegを使用して無音ファイルを生成
-for sound in rain waves forest birds thunder wind fireplace clock keyboard cafe city train white-noise brown-noise; do
-  ffmpeg -f lavfi -i anullsrc=r=44100:cl=stereo -t 10 -q:a 9 -acodec mp3 "$sound.mp3"
-done
-```
-
-### 本番用音源
-
-以下のサイトからロイヤリティフリーの音源を入手可能：
-
-- [Freesound.org](https://freesound.org/) - CC0ライセンスの音源多数
-- [Zapsplat.com](https://www.zapsplat.com/) - 無料登録で利用可能
-- [Mixkit](https://mixkit.co/free-sound-effects/) - 商用利用可能な音源
 
 ## ライセンス
 
-使用する音源のライセンスを必ず確認し、適切なクレジット表記を行ってください。
+各音源のライセンス情報は [LICENSES.md](./LICENSES.md) を参照してください。

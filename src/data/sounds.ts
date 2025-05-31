@@ -26,12 +26,12 @@ export const SOUND_SOURCES: SoundSource[] = [
     color: '#06B6D4', // cyan-500
   },
   {
-    id: 'forest',
-    name: '森',
+    id: 'stream',
+    name: '小川',
     category: 'nature',
-    description: '森の環境音',
-    icon: 'Trees',
-    fileName: 'forest.mp3',
+    description: '小川のせせらぎ',
+    icon: 'Waves',
+    fileName: 'stream.mp3',
     defaultVolume: 45,
     color: '#10B981', // emerald-500
   },
@@ -47,9 +47,9 @@ export const SOUND_SOURCES: SoundSource[] = [
   },
   {
     id: 'thunder',
-    name: '雷',
+    name: '雷雨',
     category: 'nature',
-    description: '遠くの雷鳴',
+    description: '雷雨と嵐',
     icon: 'Zap',
     fileName: 'thunder.mp3',
     defaultVolume: 35,
@@ -65,6 +65,16 @@ export const SOUND_SOURCES: SoundSource[] = [
     defaultVolume: 40,
     color: '#6EE7B7', // emerald-300
   },
+  {
+    id: 'summer-night',
+    name: '夏の夜',
+    category: 'nature',
+    description: '虫の音が響く夏の夜',
+    icon: 'Moon',
+    fileName: 'summer-night.mp3',
+    defaultVolume: 35,
+    color: '#4B5563', // gray-600
+  },
 
   // Indoor sounds
   {
@@ -76,26 +86,6 @@ export const SOUND_SOURCES: SoundSource[] = [
     fileName: 'fireplace.mp3',
     defaultVolume: 45,
     color: '#F97316', // orange-500
-  },
-  {
-    id: 'clock',
-    name: '時計',
-    category: 'indoor',
-    description: '時計の針音',
-    icon: 'Clock',
-    fileName: 'clock.mp3',
-    defaultVolume: 25,
-    color: '#6B7280', // gray-500
-  },
-  {
-    id: 'keyboard',
-    name: 'キーボード',
-    category: 'indoor',
-    description: 'タイピング音',
-    icon: 'Keyboard',
-    fileName: 'keyboard.mp3',
-    defaultVolume: 30,
-    color: '#EC4899', // pink-500
   },
 
   // Urban sounds
@@ -129,6 +119,16 @@ export const SOUND_SOURCES: SoundSource[] = [
     defaultVolume: 45,
     color: '#DC2626', // red-600
   },
+  {
+    id: 'boat',
+    name: 'ボート',
+    category: 'urban',
+    description: 'ボートのエンジン音',
+    icon: 'Anchor',
+    fileName: 'boat.mp3',
+    defaultVolume: 40,
+    color: '#1E40AF', // blue-800
+  },
 
   // White noise
   {
@@ -142,11 +142,21 @@ export const SOUND_SOURCES: SoundSource[] = [
     color: '#E5E7EB', // gray-200
   },
   {
+    id: 'pink-noise',
+    name: 'ピンクノイズ',
+    category: 'white-noise',
+    description: '心地よいピンクノイズ',
+    icon: 'Volume2',
+    fileName: 'pink-noise.mp3',
+    defaultVolume: 30,
+    color: '#FFC0CB', // pink
+  },
+  {
     id: 'brown-noise',
     name: 'ブラウンノイズ',
     category: 'white-noise',
     description: '深いリラックスのためのブラウンノイズ',
-    icon: 'Volume2',
+    icon: 'Headphones',
     fileName: 'brown-noise.mp3',
     defaultVolume: 30,
     color: '#92400E', // amber-800
