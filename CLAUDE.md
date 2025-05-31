@@ -82,6 +82,19 @@ src-tauri/
 - Error handling is critical for audio file loading failures
 - Memory management: unused audio sources should be automatically unloaded
 
+## Development Guidelines
+
+### 開発方針
+- プロジェクトの開発方針に関わる決定事項はすべてCLAUDE.mdに記載する
+- 新しい技術選定や設計決定を行った場合は即座に文書化する
+- チーム開発を想定し、明確で一貫性のあるガイドラインを維持する
+
+### コーディング規約
+- TypeScriptの厳格な型チェックを有効化（strict: true）
+- ESLintとPrettierによる自動フォーマット
+- コンポーネントは関数型で実装
+- カスタムフックによるロジックの分離
+
 ## Issue Management
 
 課題管理はGitHub Issuesで行います。以下のコマンドで操作できます：
@@ -151,10 +164,17 @@ gh issue list --assignee @me --label "status: in progress" --repo kshiva1126/amb
 
 ### ブランチ運用
 ```bash
-# issue対応開始時：専用ブランチを作成
-git checkout -b issue-<issue番号>-<簡潔な説明>
-# 例: git checkout -b issue-3-tauri-setup
+# issue対応開始時：featureブランチを作成
+git checkout -b feature/issue-<issue番号>-<簡潔な説明>
+# 例: git checkout -b feature/issue-3-tauri-setup
 
 # 作業完了後：プルリクエストを作成
 gh pr create --title "タイトル" --body "本文"
 ```
+
+### ブランチ命名規則
+- `feature/*` - 新機能開発
+- `fix/*` - バグ修正
+- `docs/*` - ドキュメント更新
+- `refactor/*` - リファクタリング
+- `test/*` - テスト追加・修正
