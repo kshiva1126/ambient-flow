@@ -100,3 +100,14 @@ gh issue view <issue番号> --repo kshiva1126/ambient-flow
 gh issue close <issue番号> --repo kshiva1126/ambient-flow
 gh issue reopen <issue番号> --repo kshiva1126/ambient-flow
 ```
+
+## Work Log
+
+作業内容は`work-log.txt`に記録します。すべての作業（issue対応、環境構築、実装、バグ修正など）を都度追記してください。
+
+記載内容の例：
+- 日付とタイトル
+- 実施した作業の詳細
+- 使用したコマンド
+- 発生した問題と解決方法
+- 作成・更新したファイル
