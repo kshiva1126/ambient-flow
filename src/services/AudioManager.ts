@@ -1,5 +1,6 @@
 import { Howl, Howler } from 'howler'
 import type { SoundSource } from '../types/sound'
+import { getSoundById } from '../data/sounds'
 
 interface AudioInstance {
   howl: Howl
@@ -184,7 +185,13 @@ export const isPlaying = (soundId: string): boolean => {
  */
 export const getVolume = (soundId: string): number => {
   const instance = audioInstances.get(soundId)
-  return instance?.volume ?? 0
+  if (instance) {
+    return instance.volume
+  }
+
+  // 音源がロードされていない場合はデフォルト値を返す
+  const soundSource = getSoundById(soundId)
+  return soundSource?.defaultVolume ?? 0
 }
 
 /**
