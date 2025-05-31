@@ -13,7 +13,11 @@
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit",
     "tauri": "tauri",
-    "prepare": "husky"
+    "prepare": "husky",
+    "rust:fmt": "cd src-tauri && cargo fmt",
+    "rust:fmt:check": "cd src-tauri && cargo fmt --check",
+    "rust:clippy": "cd src-tauri && cargo clippy -- -D warnings",
+    "rust:check": "cd src-tauri && cargo check"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",
@@ -49,6 +53,9 @@
     ],
     "*.{json,md,css,html}": [
       "prettier --write"
+    ],
+    "src-tauri/**/*.rs": [
+      "bash -c 'cd src-tauri && cargo fmt'"
     ]
   }
 }
