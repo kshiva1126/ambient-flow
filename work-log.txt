@@ -64,3 +64,71 @@ CLAUDE.mdにGit管理セクションを追加し、コミット&プッシュの�
 
 ### 更新したファイル
 - `CLAUDE.md` - Git管理セクションを追加
+
+## 2025/05/31 - ブランチ命名規則の更新
+
+### 実施内容
+CLAUDE.mdのブランチ運用ルールを更新し、feature/*の命名規則を採用しました。
+
+### 変更内容
+- ブランチ命名を`issue-*`から`feature/issue-*`に変更
+- ブランチ命名規則を追加：
+  - `feature/*` - 新機能開発
+  - `fix/*` - バグ修正
+  - `docs/*` - ドキュメント更新
+  - `refactor/*` - リファクタリング
+  - `test/*` - テスト追加・修正
+
+### 作業内容
+- 既存のブランチ`issue-3-tauri-setup`を削除
+- 新しいブランチ`feature/issue-3-tauri-setup`を作成
+
+### 更新したファイル
+- `CLAUDE.md` - ブランチ運用セクションを更新
+
+## 2025/05/31 - Issue #3: Tauri v2.xプロジェクトの初期化完了
+
+### 実施内容
+Issue #3「Setup: Tauri v2.xプロジェクトの初期化」を完了しました。
+
+### 作業内容
+1. **Rust環境のセットアップ**
+   - Rustをインストール (rustc 1.87.0)
+   - cargoをPATHに追加
+
+2. **Tauri CLIのインストール**
+   - `cargo install tauri-cli --version "^2.0.0"`
+   - tauri-cli 2.5.0をインストール
+
+3. **Tauriプロジェクトの初期化**
+   - `cargo tauri init`コマンドで初期化
+   - アプリ名: ambient-flow
+   - ウィンドウタイトル: AmbientFlow
+   - フロントエンドディストリビューション: ../dist
+   - 開発サーバーURL: http://localhost:5173
+
+4. **設定の調整**
+   - tauri.conf.jsonを編集:
+     - ウィンドウサイズ: 1200x800px（固定）
+     - productName: AmbientFlow
+     - identifier: com.ambientflow.app
+     - resizable: false
+
+5. **ディレクトリ構造の整備**
+   - フロントエンド用ディレクトリを作成:
+     - src/components/
+     - src/hooks/
+     - src/stores/
+     - src/utils/
+     - src/types/
+     - src/assets/
+     - src/styles/
+   - .gitignoreファイルを作成
+
+### 作成・更新したファイル
+- src-tauri/tauri.conf.json - Tauri設定ファイル
+- .gitignore - Git除外設定
+- src/ディレクトリ構造 - フロントエンド開発用
+
+### 次のステップ
+Issue #4「React 19 + TypeScript 5.8環境構築」に進む
