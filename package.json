@@ -22,6 +22,8 @@
   "dependencies": {
     "@tauri-apps/api": "^2.0.0",
     "@tauri-apps/plugin-shell": "^2.0.0",
+    "howler": "^2.2.4",
+    "lucide-react": "^0.511.0",
     "motion": "^12.15.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
@@ -30,6 +32,7 @@
     "@eslint/js": "^9.15.0",
     "@tailwindcss/vite": "^4.0.0",
     "@tauri-apps/cli": "^2.0.0",
+    "@types/howler": "^2.2.12",
     "@types/react": "^19.0.1",
     "@types/react-dom": "^19.0.1",
     "@vitejs/plugin-react": "^4.3.4",
