@@ -26,7 +26,10 @@ test.describe('AmbientFlow App', () => {
   })
 
   test('should display volume controls for each sound', async ({ page }) => {
-    const volumeSliders = page.locator('[data-testid^="volume-"]')
+    // Count only volume sliders (input elements, not displays)
+    const volumeSliders = page.locator(
+      'input[type="range"][data-testid^="volume-"]'
+    )
     await expect(volumeSliders).toHaveCount(15)
 
     // Check initial volume display

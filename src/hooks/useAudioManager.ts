@@ -18,10 +18,16 @@ interface UseAudioManagerReturn {
 
 export const useAudioManager = (): UseAudioManagerReturn => {
   const [playingSounds, setPlayingSounds] = useState<string[]>([])
+  const [volumeUpdateCount, setVolumeUpdateCount] = useState(0)
 
   // 再生中の音源リストを更新
   const updatePlayingSounds = useCallback(() => {
     setPlayingSounds(audioManager.getPlayingSounds())
+  }, [])
+
+  // 音量更新をトリガー
+  const updateVolume = useCallback(() => {
+    setVolumeUpdateCount((prev) => prev + 1)
   }, [])
 
   const play = useCallback(
@@ -40,9 +46,14 @@ export const useAudioManager = (): UseAudioManagerReturn => {
     [updatePlayingSounds]
   )
 
-  const setVolume = useCallback((soundId: string, volume: number) => {
-    audioManager.setVolume(soundId, volume)
-  }, [])
+  const setVolume = useCallback(
+    (soundId: string, volume: number) => {
+      audioManager.setVolume(soundId, volume)
+      // 音量変更時に再レンダリングをトリガー
+      updateVolume()
+    },
+    [updateVolume]
+  )
 
   const fadeIn = useCallback(
     (soundId: string, duration?: number) => {
@@ -71,13 +82,21 @@ export const useAudioManager = (): UseAudioManagerReturn => {
     return audioManager.isPlaying(soundId)
   }, [])
 
-  const getVolume = useCallback((soundId: string) => {
-    return audioManager.getVolume(soundId)
-  }, [])
+  const getVolume = useCallback(
+    (soundId: string) => {
+      return audioManager.getVolume(soundId)
+    },
+    [volumeUpdateCount]
+  )
 
-  const loadSound = useCallback((source: SoundSource) => {
-    audioManager.load(source)
-  }, [])
+  const loadSound = useCallback(
+    (source: SoundSource) => {
+      audioManager.load(source)
+      // ロード時に音量状態も更新
+      updateVolume()
+    },
+    [updateVolume]
+  )
 
   const unloadSound = useCallback(
     (soundId: string) => {
