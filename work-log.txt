@@ -1,0 +1,28 @@
+# AmbientFlow 作業ログ
+
+## 2025-05-31
+
+### GitHub Issues作成
+- ambient-flowリポジトリでGitHub Issuesによる課題管理の設定を確認
+- テスト用issue作成: #2「Phase 1: 基本的な音声再生機能の実装」
+
+### CLAUDE.mdの更新
+- Issue管理セクションを追加
+- ghコマンドによるissue操作方法を記載
+  - issue一覧表示: `gh issue list --repo kshiva1126/ambient-flow`
+  - issue作成: `gh issue create --repo kshiva1126/ambient-flow --title "タイトル" --body "本文"`
+  - issue詳細表示: `gh issue view <issue番号> --repo kshiva1126/ambient-flow`
+  - issueのステータス更新: `gh issue close/reopen <issue番号> --repo kshiva1126/ambient-flow`
+
+### Phase 1の詳細化
+- Phase 1を6つの詳細なissueに分割:
+  - #3: Setup: Tauri v2.xプロジェクトの初期化
+  - #4: Setup: React 19 + TypeScript 5.8環境構築
+  - #5: Feature: Howler.jsを使用した音声再生基盤
+  - #6: Feature: 環境音ソースの定義とアセット準備
+  - #7: UI: 音源コントロールコンポーネント
+  - #8: Feature: Zustand状態管理の実装
+
+### Issue #3の作業開始
+- Rustのインストール完了 (rustc 1.87.0)
+- Tauri CLI v2.xのインストール試行中（中断）
