@@ -20,4 +20,16 @@ export default defineConfig({
     minify: process.env.TAURI_DEBUG ? false : 'esbuild',
     sourcemap: !!process.env.TAURI_DEBUG,
   },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/e2e/**', // E2Eテストを除外
+      '**/.{idea,git,cache,output,temp}/**',
+      '**/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*',
+    ],
+  },
 })

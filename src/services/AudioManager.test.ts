@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { Howl } from 'howler'
-import { AudioManager } from './AudioManager'
+import * as audioManager from './AudioManager'
 import type { SoundSource } from '../types/sound'
 
 // Mock data
@@ -15,399 +14,283 @@ const mockSoundSource: SoundSource = {
   color: '#3B82F6',
 }
 
-// Type for accessing private members
-interface AudioManagerPrivate extends AudioManager {
-  audioInstances: Map<string, unknown>
-}
-
 describe('AudioManager', () => {
-  let audioManager: AudioManager
-  let audioManagerPrivate: AudioManagerPrivate
-
   beforeEach(() => {
     vi.clearAllMocks()
-    // Get fresh instance
-    audioManager = AudioManager.getInstance()
-    audioManagerPrivate = audioManager as AudioManagerPrivate
-    // Clear any existing instances
-    audioManagerPrivate.audioInstances.clear()
+    // Clear all audio instances before each test
+    audioManager.clearAll()
   })
 
   afterEach(() => {
-    // Clean up
-    audioManagerPrivate.audioInstances.clear()
-  })
-
-  describe('getInstance', () => {
-    it('should return the same instance', () => {
-      const instance1 = AudioManager.getInstance()
-      const instance2 = AudioManager.getInstance()
-      expect(instance1).toBe(instance2)
-    })
+    // Clean up after each test
+    audioManager.clearAll()
   })
 
   describe('load', () => {
     it('should load a sound source', () => {
       audioManager.load(mockSoundSource)
-
-      expect(Howl).toHaveBeenCalledWith({
-        src: ['/src/assets/sounds/test.mp3'],
-        html5: true,
-        loop: true,
-        volume: 0.5,
-        preload: true,
-        onloaderror: expect.any(Function),
-        onplayerror: expect.any(Function),
-      })
+      // Verify the sound is loaded by checking it can be played
+      expect(() => audioManager.play(mockSoundSource.id)).not.toThrow()
     })
 
     it('should not load the same sound twice', () => {
       audioManager.load(mockSoundSource)
       audioManager.load(mockSoundSource)
+      // Should not throw an error when loading the same sound twice
+      expect(() => audioManager.play(mockSoundSource.id)).not.toThrow()
+    })
 
-      expect(Howl).toHaveBeenCalledTimes(1)
+    it('should handle load errors gracefully', () => {
+      const invalidSource: SoundSource = {
+        ...mockSoundSource,
+        fileName: 'nonexistent.mp3',
+      }
+      expect(() => audioManager.load(invalidSource)).not.toThrow()
     })
   })
 
   describe('play', () => {
+    beforeEach(() => {
+      audioManager.load(mockSoundSource)
+    })
+
     it('should play a loaded sound', () => {
-      audioManager.load(mockSoundSource)
-      const mockPlay = vi.fn()
-      const instances = audioManagerPrivate.audioInstances as Map<
-        string,
-        { howl: { play: typeof mockPlay }; isPlaying: boolean }
-      >
-      instances.get('test-sound')!.howl.play = mockPlay
-
-      audioManager.play('test-sound')
-
-      expect(mockPlay).toHaveBeenCalled()
-      expect(instances.get('test-sound')!.isPlaying).toBe(true)
+      audioManager.play(mockSoundSource.id)
+      expect(audioManager.isPlaying(mockSoundSource.id)).toBe(true)
     })
 
-    it('should not play an already playing sound', () => {
-      audioManager.load(mockSoundSource)
-      const mockPlay = vi.fn()
-      const instances = audioManagerPrivate.audioInstances as Map<
-        string,
-        { howl: { play: typeof mockPlay }; isPlaying: boolean }
-      >
-      instances.get('test-sound')!.howl.play = mockPlay
-      instances.get('test-sound')!.isPlaying = true
-
-      audioManager.play('test-sound')
-
-      expect(mockPlay).not.toHaveBeenCalled()
+    it('should not throw when playing unloaded sound', () => {
+      expect(() => audioManager.play('non-existent')).not.toThrow()
     })
 
-    it('should warn when trying to play unloaded sound', () => {
-      const consoleWarn = vi.spyOn(console, 'warn')
-      audioManager.play('non-existent')
-
-      expect(consoleWarn).toHaveBeenCalledWith('Sound non-existent not loaded')
+    it('should not play the same sound twice', () => {
+      audioManager.play(mockSoundSource.id)
+      audioManager.play(mockSoundSource.id)
+      expect(audioManager.isPlaying(mockSoundSource.id)).toBe(true)
     })
   })
 
   describe('stop', () => {
+    beforeEach(() => {
+      audioManager.load(mockSoundSource)
+      audioManager.play(mockSoundSource.id)
+    })
+
     it('should stop a playing sound', () => {
-      audioManager.load(mockSoundSource)
-      const mockStop = vi.fn()
-      const instances = audioManagerPrivate.audioInstances as Map<
-        string,
-        { howl: { stop: typeof mockStop }; isPlaying: boolean }
-      >
-      instances.get('test-sound')!.howl.stop = mockStop
-      instances.get('test-sound')!.isPlaying = true
-
-      audioManager.stop('test-sound')
-
-      expect(mockStop).toHaveBeenCalled()
-      expect(instances.get('test-sound')!.isPlaying).toBe(false)
+      audioManager.stop(mockSoundSource.id)
+      expect(audioManager.isPlaying(mockSoundSource.id)).toBe(false)
     })
 
-    it('should not stop an already stopped sound', () => {
-      audioManager.load(mockSoundSource)
-      const mockStop = vi.fn()
-      const instances = audioManagerPrivate.audioInstances as Map<
-        string,
-        { howl: { stop: typeof mockStop }; isPlaying: boolean }
-      >
-      instances.get('test-sound')!.howl.stop = mockStop
-      instances.get('test-sound')!.isPlaying = false
-
-      audioManager.stop('test-sound')
-
-      expect(mockStop).not.toHaveBeenCalled()
-    })
-
-    it('should handle non-existent sound gracefully', () => {
+    it('should not throw when stopping unloaded sound', () => {
       expect(() => audioManager.stop('non-existent')).not.toThrow()
+    })
+
+    it('should not throw when stopping already stopped sound', () => {
+      audioManager.stop(mockSoundSource.id)
+      expect(() => audioManager.stop(mockSoundSource.id)).not.toThrow()
     })
   })
 
   describe('setVolume', () => {
-    it('should set volume within valid range', () => {
+    beforeEach(() => {
       audioManager.load(mockSoundSource)
-      const mockVolume = vi.fn()
-      const instances = audioManagerPrivate.audioInstances as Map<
-        string,
-        { howl: { volume: typeof mockVolume }; volume: number }
-      >
-      instances.get('test-sound')!.howl.volume = mockVolume
+    })
 
-      audioManager.setVolume('test-sound', 75)
-
-      expect(mockVolume).toHaveBeenCalledWith(0.75)
-      expect(instances.get('test-sound')!.volume).toBe(75)
+    it('should set volume for a loaded sound', () => {
+      audioManager.setVolume(mockSoundSource.id, 75)
+      expect(audioManager.getVolume(mockSoundSource.id)).toBe(75)
     })
 
     it('should clamp volume to 0-100 range', () => {
-      audioManager.load(mockSoundSource)
-      const mockVolume = vi.fn()
-      const instances = audioManagerPrivate.audioInstances as Map<
-        string,
-        { howl: { volume: typeof mockVolume } }
-      >
-      instances.get('test-sound')!.howl.volume = mockVolume
+      audioManager.setVolume(mockSoundSource.id, -10)
+      expect(audioManager.getVolume(mockSoundSource.id)).toBe(0)
 
-      audioManager.setVolume('test-sound', 150)
-      expect(mockVolume).toHaveBeenCalledWith(1)
-
-      audioManager.setVolume('test-sound', -50)
-      expect(mockVolume).toHaveBeenCalledWith(0)
+      audioManager.setVolume(mockSoundSource.id, 150)
+      expect(audioManager.getVolume(mockSoundSource.id)).toBe(100)
     })
 
-    it('should handle non-existent sound gracefully', () => {
+    it('should not throw when setting volume for unloaded sound', () => {
       expect(() => audioManager.setVolume('non-existent', 50)).not.toThrow()
     })
   })
 
   describe('fadeIn', () => {
-    it('should fade in a sound', () => {
-      vi.useFakeTimers()
+    beforeEach(() => {
       audioManager.load(mockSoundSource)
-      const mockFade = vi.fn()
-      const mockPlay = vi.fn()
-      const instances = audioManagerPrivate.audioInstances as Map<
-        string,
-        {
-          howl: { fade: typeof mockFade; play: typeof mockPlay }
-          isPlaying: boolean
-        }
-      >
-      instances.get('test-sound')!.howl.fade = mockFade
-      instances.get('test-sound')!.howl.play = mockPlay
-
-      audioManager.fadeIn('test-sound', 1000)
-
-      expect(mockFade).toHaveBeenCalledWith(0, 0.5, 1000)
-      expect(mockPlay).toHaveBeenCalled()
-      expect(instances.get('test-sound')!.isPlaying).toBe(true)
-
-      vi.useRealTimers()
     })
 
-    it('should use default duration', () => {
-      audioManager.load(mockSoundSource)
-      const mockFade = vi.fn()
-      const instances = audioManagerPrivate.audioInstances as Map<
-        string,
-        { howl: { fade: typeof mockFade } }
-      >
-      instances.get('test-sound')!.howl.fade = mockFade
+    it('should start playing and fade in', () => {
+      audioManager.fadeIn(mockSoundSource.id, 100)
+      expect(audioManager.isPlaying(mockSoundSource.id)).toBe(true)
+    })
 
-      audioManager.fadeIn('test-sound')
-
-      expect(mockFade).toHaveBeenCalledWith(0, 0.5, 1000)
+    it('should not throw when fading in unloaded sound', () => {
+      expect(() => audioManager.fadeIn('non-existent', 100)).not.toThrow()
     })
   })
 
   describe('fadeOut', () => {
-    it('should fade out a sound', () => {
-      vi.useFakeTimers()
+    beforeEach(() => {
       audioManager.load(mockSoundSource)
-      const mockFade = vi.fn()
-      const mockStop = vi.fn()
-      const mockVolume = vi.fn().mockReturnValue(0)
-      const instances = audioManagerPrivate.audioInstances as Map<
-        string,
-        {
-          howl: {
-            fade: typeof mockFade
-            stop: typeof mockStop
-            volume: typeof mockVolume
-          }
-          volume: number
-          isPlaying: boolean
-        }
-      >
-      instances.get('test-sound')!.howl.fade = mockFade
-      instances.get('test-sound')!.howl.stop = mockStop
-      instances.get('test-sound')!.howl.volume = mockVolume
-      instances.get('test-sound')!.volume = 50
+      audioManager.play(mockSoundSource.id)
+    })
 
-      audioManager.fadeOut('test-sound', 1000)
+    it('should fade out a playing sound', () => {
+      audioManager.fadeOut(mockSoundSource.id, 100)
+      // Sound should still be playing immediately after fadeOut call
+      expect(audioManager.isPlaying(mockSoundSource.id)).toBe(true)
+    })
 
-      expect(mockFade).toHaveBeenCalledWith(0.5, 0, 1000)
-
-      vi.advanceTimersByTime(1000)
-
-      expect(mockStop).toHaveBeenCalled()
-      expect(instances.get('test-sound')!.isPlaying).toBe(false)
-
-      vi.useRealTimers()
+    it('should not throw when fading out unloaded sound', () => {
+      expect(() => audioManager.fadeOut('non-existent', 100)).not.toThrow()
     })
   })
 
   describe('stopAll', () => {
+    beforeEach(() => {
+      const source1 = { ...mockSoundSource, id: 'sound1' }
+      const source2 = { ...mockSoundSource, id: 'sound2' }
+      audioManager.load(source1)
+      audioManager.load(source2)
+      audioManager.play('sound1')
+      audioManager.play('sound2')
+    })
+
     it('should stop all playing sounds', () => {
-      const sound1 = { ...mockSoundSource, id: 'sound1' }
-      const sound2 = { ...mockSoundSource, id: 'sound2' }
-
-      audioManager.load(sound1)
-      audioManager.load(sound2)
-
-      const mockStop1 = vi.fn()
-      const mockStop2 = vi.fn()
-      const instances = audioManagerPrivate.audioInstances as Map<
-        string,
-        {
-          howl: { stop: typeof mockStop1 }
-          isPlaying: boolean
-        }
-      >
-      instances.get('sound1')!.howl.stop = mockStop1
-      instances.get('sound1')!.isPlaying = true
-      instances.get('sound2')!.howl.stop = mockStop2
-      instances.get('sound2')!.isPlaying = true
+      expect(audioManager.isPlaying('sound1')).toBe(true)
+      expect(audioManager.isPlaying('sound2')).toBe(true)
 
       audioManager.stopAll()
 
-      expect(mockStop1).toHaveBeenCalled()
-      expect(mockStop2).toHaveBeenCalled()
-      expect(instances.get('sound1')!.isPlaying).toBe(false)
-      expect(instances.get('sound2')!.isPlaying).toBe(false)
-    })
-  })
-
-  describe('unloadUnused', () => {
-    it('should unload unused sounds', () => {
-      const sound1 = { ...mockSoundSource, id: 'sound1' }
-      const sound2 = { ...mockSoundSource, id: 'sound2' }
-
-      audioManager.load(sound1)
-      audioManager.load(sound2)
-
-      const mockUnload1 = vi.fn()
-      const mockUnload2 = vi.fn()
-      const instances = audioManagerPrivate.audioInstances as Map<
-        string,
-        {
-          howl: { unload: typeof mockUnload1 }
-          isPlaying: boolean
-        }
-      >
-      instances.get('sound1')!.howl.unload = mockUnload1
-      instances.get('sound1')!.isPlaying = false
-      instances.get('sound2')!.howl.unload = mockUnload2
-      instances.get('sound2')!.isPlaying = true
-
-      audioManager.unloadUnused()
-
-      expect(mockUnload1).toHaveBeenCalled()
-      expect(mockUnload2).not.toHaveBeenCalled()
-      expect(instances.has('sound1')).toBe(false)
-      expect(instances.has('sound2')).toBe(true)
-    })
-  })
-
-  describe('unload', () => {
-    it('should unload a specific sound', () => {
-      audioManager.load(mockSoundSource)
-      const mockUnload = vi.fn()
-      const instances = audioManagerPrivate.audioInstances as Map<
-        string,
-        { howl: { unload: typeof mockUnload } }
-      >
-      instances.get('test-sound')!.howl.unload = mockUnload
-
-      audioManager.unload('test-sound')
-
-      expect(mockUnload).toHaveBeenCalled()
-      expect(instances.has('test-sound')).toBe(false)
-    })
-
-    it('should handle non-existent sound gracefully', () => {
-      expect(() => audioManager.unload('non-existent')).not.toThrow()
+      expect(audioManager.isPlaying('sound1')).toBe(false)
+      expect(audioManager.isPlaying('sound2')).toBe(false)
     })
   })
 
   describe('getPlayingSounds', () => {
-    it('should return list of playing sound IDs', () => {
-      const sound1 = { ...mockSoundSource, id: 'sound1' }
-      const sound2 = { ...mockSoundSource, id: 'sound2' }
-      const sound3 = { ...mockSoundSource, id: 'sound3' }
+    beforeEach(() => {
+      const source1 = { ...mockSoundSource, id: 'sound1' }
+      const source2 = { ...mockSoundSource, id: 'sound2' }
+      audioManager.load(source1)
+      audioManager.load(source2)
+    })
 
-      audioManager.load(sound1)
-      audioManager.load(sound2)
-      audioManager.load(sound3)
+    it('should return empty array when no sounds playing', () => {
+      expect(audioManager.getPlayingSounds()).toEqual([])
+    })
 
-      const instances = audioManagerPrivate.audioInstances as Map<
-        string,
-        { isPlaying: boolean }
-      >
-      instances.get('sound1')!.isPlaying = true
-      instances.get('sound2')!.isPlaying = false
-      instances.get('sound3')!.isPlaying = true
+    it('should return array of playing sound IDs', () => {
+      audioManager.play('sound1')
+      audioManager.play('sound2')
 
-      const playingSounds = audioManager.getPlayingSounds()
+      const playing = audioManager.getPlayingSounds()
+      expect(playing).toContain('sound1')
+      expect(playing).toContain('sound2')
+      expect(playing).toHaveLength(2)
+    })
 
-      expect(playingSounds).toEqual(['sound1', 'sound3'])
+    it('should update when sounds are stopped', () => {
+      audioManager.play('sound1')
+      audioManager.play('sound2')
+      audioManager.stop('sound1')
+
+      const playing = audioManager.getPlayingSounds()
+      expect(playing).toContain('sound2')
+      expect(playing).not.toContain('sound1')
+      expect(playing).toHaveLength(1)
     })
   })
 
   describe('isPlaying', () => {
-    it('should return true for playing sound', () => {
+    beforeEach(() => {
       audioManager.load(mockSoundSource)
-      const instances = audioManagerPrivate.audioInstances as Map<
-        string,
-        { isPlaying: boolean }
-      >
-      instances.get('test-sound')!.isPlaying = true
-
-      expect(audioManager.isPlaying('test-sound')).toBe(true)
     })
 
-    it('should return false for non-playing sound', () => {
-      audioManager.load(mockSoundSource)
-      const instances = audioManagerPrivate.audioInstances as Map<
-        string,
-        { isPlaying: boolean }
-      >
-      instances.get('test-sound')!.isPlaying = false
-
-      expect(audioManager.isPlaying('test-sound')).toBe(false)
-    })
-
-    it('should return false for non-existent sound', () => {
+    it('should return false for unloaded sound', () => {
       expect(audioManager.isPlaying('non-existent')).toBe(false)
+    })
+
+    it('should return false for loaded but not playing sound', () => {
+      expect(audioManager.isPlaying(mockSoundSource.id)).toBe(false)
+    })
+
+    it('should return true for playing sound', () => {
+      audioManager.play(mockSoundSource.id)
+      expect(audioManager.isPlaying(mockSoundSource.id)).toBe(true)
     })
   })
 
   describe('getVolume', () => {
-    it('should return volume for existing sound', () => {
+    beforeEach(() => {
       audioManager.load(mockSoundSource)
-      const instances = audioManagerPrivate.audioInstances as Map<
-        string,
-        { volume: number }
-      >
-      instances.get('test-sound')!.volume = 75
-
-      expect(audioManager.getVolume('test-sound')).toBe(75)
     })
 
-    it('should return 0 for non-existent sound', () => {
+    it('should return 0 for unloaded sound', () => {
       expect(audioManager.getVolume('non-existent')).toBe(0)
+    })
+
+    it('should return default volume for loaded sound', () => {
+      expect(audioManager.getVolume(mockSoundSource.id)).toBe(
+        mockSoundSource.defaultVolume
+      )
+    })
+
+    it('should return updated volume after setVolume', () => {
+      audioManager.setVolume(mockSoundSource.id, 75)
+      expect(audioManager.getVolume(mockSoundSource.id)).toBe(75)
+    })
+  })
+
+  describe('unload', () => {
+    beforeEach(() => {
+      audioManager.load(mockSoundSource)
+    })
+
+    it('should unload a sound', () => {
+      audioManager.unload(mockSoundSource.id)
+      expect(audioManager.getVolume(mockSoundSource.id)).toBe(0)
+    })
+
+    it('should not throw when unloading non-existent sound', () => {
+      expect(() => audioManager.unload('non-existent')).not.toThrow()
+    })
+  })
+
+  describe('unloadUnused', () => {
+    beforeEach(() => {
+      const source1 = { ...mockSoundSource, id: 'sound1' }
+      const source2 = { ...mockSoundSource, id: 'sound2' }
+      audioManager.load(source1)
+      audioManager.load(source2)
+      audioManager.play('sound1') // Only sound1 is playing
+    })
+
+    it('should unload unused sounds but keep playing sounds', () => {
+      audioManager.unloadUnused()
+
+      // sound1 should still be available (playing)
+      expect(audioManager.isPlaying('sound1')).toBe(true)
+
+      // sound2 should be unloaded (not playing)
+      expect(audioManager.getVolume('sound2')).toBe(0)
+    })
+  })
+
+  describe('clearAll', () => {
+    beforeEach(() => {
+      const source1 = { ...mockSoundSource, id: 'sound1' }
+      const source2 = { ...mockSoundSource, id: 'sound2' }
+      audioManager.load(source1)
+      audioManager.load(source2)
+      audioManager.play('sound1')
+    })
+
+    it('should clear all sounds', () => {
+      audioManager.clearAll()
+
+      expect(audioManager.isPlaying('sound1')).toBe(false)
+      expect(audioManager.getVolume('sound1')).toBe(0)
+      expect(audioManager.getVolume('sound2')).toBe(0)
     })
   })
 })

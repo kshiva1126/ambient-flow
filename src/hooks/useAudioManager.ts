@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { audioManager } from '../services/AudioManager'
+import * as audioManager from '../services/AudioManager'
 import type { SoundSource } from '../types/sound'
 
 interface UseAudioManagerReturn {
