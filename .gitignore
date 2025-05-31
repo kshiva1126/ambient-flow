@@ -31,3 +31,6 @@ src-tauri/target/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+
+# Coverage reports
+/coverage/
