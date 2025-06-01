@@ -4,7 +4,7 @@ import type { SoundSource } from '../types/sound'
 
 interface UseAudioManagerReturn {
   playingSounds: string[]
-  play: (soundId: string) => void
+  play: (soundId: string) => Promise<void>
   stop: (soundId: string) => void
   setVolume: (soundId: string, volume: number) => void
   fadeIn: (soundId: string, duration?: number) => void
@@ -12,13 +12,39 @@ interface UseAudioManagerReturn {
   stopAll: () => void
   isPlaying: (soundId: string) => boolean
   getVolume: (soundId: string) => number
-  loadSound: (source: SoundSource) => void
+  loadSound: (source: SoundSource) => Promise<void>
   unloadSound: (soundId: string) => void
+  isOffline: boolean
+  memoryUsage: {
+    audioInstances: number
+    estimatedMemory: string
+    cachedFiles: number
+  }
+  cacheStats: {
+    totalSize: number
+    cachedFiles: number
+    hitRate: number
+    totalRequests: number
+    cacheHits: number
+  }
 }
 
 export const useAudioManager = (): UseAudioManagerReturn => {
   const [playingSounds, setPlayingSounds] = useState<string[]>([])
   const [volumeUpdateCount, setVolumeUpdateCount] = useState(0)
+  const [isOffline, setIsOffline] = useState(false)
+  const [memoryUsage, setMemoryUsage] = useState({
+    audioInstances: 0,
+    estimatedMemory: '0MB',
+    cachedFiles: 0,
+  })
+  const [cacheStats, setCacheStats] = useState({
+    totalSize: 0,
+    cachedFiles: 0,
+    hitRate: 0,
+    totalRequests: 0,
+    cacheHits: 0,
+  })
 
   // 再生中の音源リストを更新
   const updatePlayingSounds = useCallback(() => {
@@ -30,12 +56,24 @@ export const useAudioManager = (): UseAudioManagerReturn => {
     setVolumeUpdateCount((prev) => prev + 1)
   }, [])
 
+  // 統計情報を更新
+  const updateStats = useCallback(() => {
+    setIsOffline(audioManager.isOffline())
+    setMemoryUsage(audioManager.getMemoryUsage())
+    setCacheStats(audioManager.getCacheStats())
+  }, [])
+
   const play = useCallback(
-    (soundId: string) => {
-      audioManager.play(soundId)
-      updatePlayingSounds()
+    async (soundId: string) => {
+      // オンデマンドローディングを試行
+      const loaded = await audioManager.loadOnDemand(soundId)
+      if (loaded) {
+        audioManager.play(soundId)
+        updatePlayingSounds()
+        updateStats()
+      }
     },
-    [updatePlayingSounds]
+    [updatePlayingSounds, updateStats]
   )
 
   const stop = useCallback(
@@ -86,16 +124,18 @@ export const useAudioManager = (): UseAudioManagerReturn => {
     (soundId: string) => {
       return audioManager.getVolume(soundId)
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [volumeUpdateCount]
   )
 
   const loadSound = useCallback(
-    (source: SoundSource) => {
-      audioManager.load(source)
+    async (source: SoundSource) => {
+      await audioManager.load(source)
       // ロード時に音量状態も更新
       updateVolume()
+      updateStats()
     },
-    [updateVolume]
+    [updateVolume, updateStats]
   )
 
   const unloadSound = useCallback(
@@ -106,10 +146,31 @@ export const useAudioManager = (): UseAudioManagerReturn => {
     [updatePlayingSounds]
   )
 
+  // 初期化時に高優先度音源をプリロード
+  useEffect(() => {
+    audioManager.preloadHighPriorityAudio()
+    updateStats()
+  }, [updateStats])
+
+  // オンライン/オフライン状態の監視
+  useEffect(() => {
+    const handleOnlineStatusChange = () => {
+      updateStats()
+    }
+
+    window.addEventListener('online', handleOnlineStatusChange)
+    window.addEventListener('offline', handleOnlineStatusChange)
+
+    return () => {
+      window.removeEventListener('online', handleOnlineStatusChange)
+      window.removeEventListener('offline', handleOnlineStatusChange)
+    }
+  }, [updateStats])
+
   // コンポーネントのアンマウント時にメモリクリーンアップ
   useEffect(() => {
     return () => {
-      audioManager.unloadUnused()
+      audioManager.smartUnloadUnused()
     }
   }, [])
 
@@ -125,5 +186,8 @@ export const useAudioManager = (): UseAudioManagerReturn => {
     getVolume,
     loadSound,
     unloadSound,
+    isOffline,
+    memoryUsage,
+    cacheStats,
   }
 }
