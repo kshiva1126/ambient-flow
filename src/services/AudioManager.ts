@@ -12,7 +12,7 @@ interface AudioInstance {
 
 // モジュールスコープでの状態管理
 const audioInstances = new Map<string, AudioInstance>()
-const basePath = '/src/assets/sounds/'
+const basePath = '/assets/sounds/'
 
 // 初期化
 Howler.autoUnlock = true

@@ -34,3 +34,6 @@ dist-ssr
 /coverage/
 # UI improvement work files
 UI_IMPROVEMENT_*.md
+
+# Cloudflare Wrangler
+.wrangler/
