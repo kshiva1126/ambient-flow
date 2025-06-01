@@ -6,12 +6,14 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import prettier from 'eslint-config-prettier'
 
 export default tseslint.config(
+  {
+    ignores: ['dist/**', 'public/sw.js', '**/*.d.ts', 'node_modules/**'],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   prettier,
   {
     files: ['**/*.{ts,tsx}'],
-    ignores: ['dist'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
@@ -26,6 +28,15 @@ export default tseslint.config(
         'warn',
         { allowConstantExport: true },
       ],
+    },
+  },
+  {
+    files: ['public/sw.js'],
+    languageOptions: {
+      globals: {
+        ...globals.serviceworker,
+        ...globals.browser,
+      },
     },
   }
 )

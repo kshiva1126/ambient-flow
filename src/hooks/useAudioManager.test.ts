@@ -17,7 +17,24 @@ vi.mock('../services/AudioManager', () => ({
   getVolume: vi.fn(),
   unload: vi.fn(),
   unloadUnused: vi.fn(),
+  smartUnloadUnused: vi.fn(),
   getPlayingSounds: vi.fn().mockReturnValue([]),
+  loadOnDemand: vi.fn().mockResolvedValue(true),
+  preloadHighPriorityAudio: vi.fn().mockResolvedValue(undefined),
+  getCacheStats: vi.fn().mockReturnValue({
+    totalSize: 0,
+    cachedFiles: 0,
+    hitRate: 0,
+    totalRequests: 0,
+    cacheHits: 0,
+  }),
+  isOffline: vi.fn().mockReturnValue(false),
+  getCachedSounds: vi.fn().mockResolvedValue([]),
+  getMemoryUsage: vi.fn().mockReturnValue({
+    audioInstances: 0,
+    estimatedMemory: '0MB',
+    cachedFiles: 0,
+  }),
 }))
 
 const mockSoundSource: SoundSource = {
@@ -45,18 +62,63 @@ describe('useAudioManager', () => {
     it('should return empty playing sounds initially', () => {
       const { result } = renderHook(() => useAudioManager())
       expect(result.current.playingSounds).toEqual([])
+      expect(result.current.isOffline).toBe(false)
+      expect(result.current.memoryUsage).toEqual({
+        audioInstances: 0,
+        estimatedMemory: '0MB',
+        cachedFiles: 0,
+      })
+      expect(result.current.cacheStats).toEqual({
+        totalSize: 0,
+        cachedFiles: 0,
+        hitRate: 0,
+        totalRequests: 0,
+        cacheHits: 0,
+      })
+    })
+
+    it('should call preloadHighPriorityAudio on mount', () => {
+      renderHook(() => useAudioManager())
+      expect(audioManager.preloadHighPriorityAudio).toHaveBeenCalled()
     })
   })
 
   describe('play', () => {
-    it('should call audioManager.play and update playing sounds', () => {
+    it('should call loadOnDemand and then play the sound', async () => {
+      vi.mocked(audioManager.getPlayingSounds).mockReturnValue(['test-sound'])
+
+      const { result } = renderHook(() => useAudioManager())
+
+      await act(async () => {
+        await result.current.play('test-sound')
+      })
+
+      expect(audioManager.loadOnDemand).toHaveBeenCalledWith('test-sound')
+      expect(audioManager.play).toHaveBeenCalledWith('test-sound')
+    })
+
+    it('should not play if loadOnDemand fails', async () => {
+      vi.mocked(audioManager.loadOnDemand).mockResolvedValueOnce(false)
+
+      const { result } = renderHook(() => useAudioManager())
+
+      await act(async () => {
+        await result.current.play('test-sound')
+      })
+
+      expect(audioManager.loadOnDemand).toHaveBeenCalledWith('test-sound')
+      expect(audioManager.play).not.toHaveBeenCalled()
+    })
+
+    it('should call audioManager.play and update playing sounds', async () => {
       vi.mocked(audioManager.getPlayingSounds).mockReturnValue(['test-sound'])
       const { result } = renderHook(() => useAudioManager())
 
-      act(() => {
-        result.current.play('test-sound')
+      await act(async () => {
+        await result.current.play('test-sound')
       })
 
+      expect(audioManager.loadOnDemand).toHaveBeenCalledWith('test-sound')
       expect(audioManager.play).toHaveBeenCalledWith('test-sound')
       expect(result.current.playingSounds).toEqual(['test-sound'])
     })
@@ -228,12 +290,12 @@ describe('useAudioManager', () => {
   })
 
   describe('cleanup', () => {
-    it('should call unloadUnused on unmount', () => {
+    it('should call smartUnloadUnused on unmount', () => {
       const { unmount } = renderHook(() => useAudioManager())
 
       unmount()
 
-      expect(audioManager.unloadUnused).toHaveBeenCalled()
+      expect(audioManager.smartUnloadUnused).toHaveBeenCalled()
     })
   })
 

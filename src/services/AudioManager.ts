@@ -1,6 +1,7 @@
 import { Howl, Howler } from 'howler'
 import type { SoundSource } from '../types/sound'
 import { getSoundById } from '../data/sounds'
+import { audioCacheManager } from './AudioCacheManager'
 
 interface AudioInstance {
   howl: Howl
@@ -18,24 +19,65 @@ Howler.autoUnlock = true
 Howler.html5PoolSize = 10
 
 /**
- * 音源を読み込む
+ * 音源を読み込む（キャッシュ対応）
  */
-export const load = (source: SoundSource): void => {
+export const load = async (source: SoundSource): Promise<void> => {
   if (audioInstances.has(source.id)) {
     return
   }
 
+  const audioUrl = `${basePath}${source.fileName}`
+
+  // キャッシュからの読み込みを試行
+  const cachedResponse = await audioCacheManager.getCachedAudioFile(
+    source.id,
+    audioUrl
+  )
+  let audioSrc = audioUrl
+
+  if (cachedResponse) {
+    // キャッシュされたファイルをBlob URLとして使用
+    const blob = await cachedResponse.blob()
+    audioSrc = URL.createObjectURL(blob)
+    console.log(`Using cached audio for ${source.id}`)
+  } else {
+    // キャッシュにない場合は通常のURLを使用し、バックグラウンドでキャッシュ
+    audioCacheManager.cacheAudioFile(source.id, audioUrl).catch((error) => {
+      console.warn(`Failed to cache audio file ${source.id}:`, error)
+    })
+  }
+
   const howl = new Howl({
-    src: [`${basePath}${source.fileName}`],
+    src: [audioSrc],
     html5: true,
     loop: true,
     volume: source.defaultVolume / 100,
     preload: true,
     onloaderror: (_id, error) => {
       console.error(`Failed to load ${source.fileName}:`, error)
+      // キャッシュされたBlob URLの場合、元のURLで再試行
+      if (audioSrc !== audioUrl) {
+        console.log(`Retrying with original URL for ${source.id}`)
+        const retryHowl = new Howl({
+          src: [audioUrl],
+          html5: true,
+          loop: true,
+          volume: source.defaultVolume / 100,
+          preload: true,
+        })
+        audioInstances.set(source.id, {
+          howl: retryHowl,
+          source,
+          volume: source.defaultVolume,
+          isPlaying: false,
+        })
+      }
     },
     onplayerror: (_id, error) => {
       console.error(`Failed to play ${source.fileName}:`, error)
+    },
+    onload: () => {
+      console.log(`Successfully loaded ${source.fileName}`)
     },
   })
 
@@ -192,6 +234,92 @@ export const getVolume = (soundId: string): number => {
   // 音源がロードされていない場合はデフォルト値を返す
   const soundSource = getSoundById(soundId)
   return soundSource?.defaultVolume ?? 0
+}
+
+/**
+ * 高優先度音源のプリロード
+ */
+export const preloadHighPriorityAudio = async (): Promise<void> => {
+  console.log('Starting high priority audio preload...')
+  await audioCacheManager.preloadHighPriorityAudio()
+}
+
+/**
+ * オンデマンドで音源を読み込み（必要時のみ）
+ */
+export const loadOnDemand = async (soundId: string): Promise<boolean> => {
+  const source = getSoundById(soundId)
+  if (!source) {
+    console.warn(`Sound source not found: ${soundId}`)
+    return false
+  }
+
+  try {
+    await load(source)
+    return true
+  } catch (error) {
+    console.error(`Failed to load sound on demand: ${soundId}`, error)
+    return false
+  }
+}
+
+/**
+ * キャッシュ統計を取得
+ */
+export const getCacheStats = () => {
+  return audioCacheManager.getCacheStats()
+}
+
+/**
+ * オフライン状態をチェック
+ */
+export const isOffline = (): boolean => {
+  return audioCacheManager.isOffline()
+}
+
+/**
+ * キャッシュされた音源の一覧を取得
+ */
+export const getCachedSounds = async (): Promise<string[]> => {
+  return await audioCacheManager.getCachedFilesList()
+}
+
+/**
+ * 未使用音源の自動アンロード（改良版）
+ */
+export const smartUnloadUnused = (): void => {
+  const playingIds = getPlayingSounds()
+
+  audioInstances.forEach((instance, id) => {
+    if (!playingIds.includes(id)) {
+      const priority = audioCacheManager.getPriority(id)
+
+      // 低優先度の音源のみアンロード（高・中優先度は保持）
+      if (priority === 'low') {
+        instance.howl.unload()
+        audioInstances.delete(id)
+        console.log(`Unloaded low priority unused audio: ${id}`)
+      }
+    }
+  })
+}
+
+/**
+ * メモリ使用量を監視
+ */
+export const getMemoryUsage = (): {
+  audioInstances: number
+  estimatedMemory: string
+  cachedFiles: number
+} => {
+  const stats = audioCacheManager.getCacheStats()
+  const estimatedMemoryMB = (stats.totalSize / (1024 * 1024)).toFixed(2)
+
+  return {
+    audioInstances: audioInstances.size,
+    estimatedMemory: `${estimatedMemoryMB}MB`,
+    cachedFiles: stats.cachedFiles,
+  }
 }
 
 /**

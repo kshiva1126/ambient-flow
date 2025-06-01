@@ -2,6 +2,73 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import * as audioManager from './AudioManager'
 import type { SoundSource } from '../types/sound'
 
+// Mock sounds.ts
+vi.mock('../data/sounds', () => ({
+  getSoundById: vi.fn((id: string) => {
+    if (id === 'test-sound') {
+      return {
+        id: 'test-sound',
+        name: 'Test Sound',
+        category: 'nature',
+        description: 'Test sound description',
+        icon: 'TestIcon',
+        fileName: 'test.mp3',
+        defaultVolume: 50,
+        color: '#3B82F6',
+      }
+    }
+    return undefined
+  }),
+  SOUND_SOURCES: [
+    {
+      id: 'test-sound',
+      name: 'Test Sound',
+      category: 'nature',
+      description: 'Test sound description',
+      icon: 'TestIcon',
+      fileName: 'test.mp3',
+      defaultVolume: 50,
+      color: '#3B82F6',
+    },
+  ],
+}))
+
+// Mock Howler.js
+const mockHowlInstance = {
+  play: vi.fn(),
+  stop: vi.fn(),
+  volume: vi.fn().mockReturnValue(0.5),
+  fade: vi.fn(),
+  unload: vi.fn(),
+}
+
+vi.mock('howler', () => ({
+  Howl: vi.fn().mockImplementation(() => mockHowlInstance),
+  Howler: {
+    autoUnlock: true,
+    html5PoolSize: 10,
+  },
+}))
+
+// Mock AudioCacheManager
+vi.mock('./AudioCacheManager', () => ({
+  audioCacheManager: {
+    getCachedAudioFile: vi.fn().mockResolvedValue(null),
+    cacheAudioFile: vi.fn().mockResolvedValue(true),
+    preloadHighPriorityAudio: vi.fn().mockResolvedValue(undefined),
+    getPriority: vi.fn().mockReturnValue('medium'),
+    getCacheStats: vi.fn().mockReturnValue({
+      totalSize: 0,
+      cachedFiles: 0,
+      hitRate: 0,
+      totalRequests: 0,
+      cacheHits: 0,
+    }),
+    isOffline: vi.fn().mockReturnValue(false),
+    getCachedFilesList: vi.fn().mockResolvedValue([]),
+  },
+}))
+
 // Mock data
 const mockSoundSource: SoundSource = {
   id: 'test-sound',
@@ -19,6 +86,8 @@ describe('AudioManager', () => {
     vi.clearAllMocks()
     // Clear all audio instances before each test
     audioManager.clearAll()
+    // Reset mock behaviors
+    mockHowlInstance.volume.mockReturnValue(0.5)
   })
 
   afterEach(() => {
@@ -27,31 +96,94 @@ describe('AudioManager', () => {
   })
 
   describe('load', () => {
-    it('should load a sound source', () => {
-      audioManager.load(mockSoundSource)
+    it('should load a sound source', async () => {
+      await audioManager.load(mockSoundSource)
       // Verify the sound is loaded by checking it can be played
       expect(() => audioManager.play(mockSoundSource.id)).not.toThrow()
     })
 
-    it('should not load the same sound twice', () => {
-      audioManager.load(mockSoundSource)
-      audioManager.load(mockSoundSource)
+    it('should not load the same sound twice', async () => {
+      await audioManager.load(mockSoundSource)
+      await audioManager.load(mockSoundSource)
       // Should not throw an error when loading the same sound twice
       expect(() => audioManager.play(mockSoundSource.id)).not.toThrow()
     })
 
-    it('should handle load errors gracefully', () => {
+    it('should handle load errors gracefully', async () => {
       const invalidSource: SoundSource = {
         ...mockSoundSource,
         fileName: 'nonexistent.mp3',
       }
-      expect(() => audioManager.load(invalidSource)).not.toThrow()
+      await expect(audioManager.load(invalidSource)).resolves.not.toThrow()
+    })
+  })
+
+  describe('loadOnDemand', () => {
+    it('should load sound on demand successfully', async () => {
+      const result = await audioManager.loadOnDemand(mockSoundSource.id)
+      expect(result).toBe(true)
+    })
+
+    it('should return false for unknown sound', async () => {
+      const result = await audioManager.loadOnDemand('unknown-sound')
+      expect(result).toBe(false)
+    })
+  })
+
+  describe('preloadHighPriorityAudio', () => {
+    it('should complete without throwing errors', async () => {
+      await expect(
+        audioManager.preloadHighPriorityAudio()
+      ).resolves.not.toThrow()
+    })
+  })
+
+  describe('getCacheStats', () => {
+    it('should return cache statistics', () => {
+      const stats = audioManager.getCacheStats()
+      expect(stats).toHaveProperty('totalSize')
+      expect(stats).toHaveProperty('cachedFiles')
+      expect(stats).toHaveProperty('hitRate')
+      expect(stats).toHaveProperty('totalRequests')
+      expect(stats).toHaveProperty('cacheHits')
+    })
+  })
+
+  describe('isOffline', () => {
+    it('should return offline status', () => {
+      const offline = audioManager.isOffline()
+      expect(typeof offline).toBe('boolean')
+    })
+  })
+
+  describe('getCachedSounds', () => {
+    it('should return array of cached sound URLs', async () => {
+      const cachedSounds = await audioManager.getCachedSounds()
+      expect(Array.isArray(cachedSounds)).toBe(true)
+    })
+  })
+
+  describe('smartUnloadUnused', () => {
+    it('should complete without throwing errors', () => {
+      expect(() => audioManager.smartUnloadUnused()).not.toThrow()
+    })
+  })
+
+  describe('getMemoryUsage', () => {
+    it('should return memory usage information', () => {
+      const usage = audioManager.getMemoryUsage()
+      expect(usage).toHaveProperty('audioInstances')
+      expect(usage).toHaveProperty('estimatedMemory')
+      expect(usage).toHaveProperty('cachedFiles')
+      expect(typeof usage.audioInstances).toBe('number')
+      expect(typeof usage.estimatedMemory).toBe('string')
+      expect(typeof usage.cachedFiles).toBe('number')
     })
   })
 
   describe('play', () => {
-    beforeEach(() => {
-      audioManager.load(mockSoundSource)
+    beforeEach(async () => {
+      await audioManager.load(mockSoundSource)
     })
 
     it('should play a loaded sound', () => {
