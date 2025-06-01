@@ -36,6 +36,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,mp3,ogg,wav}'],
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5MB
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -117,16 +118,35 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
+        // Optimize for Cloudflare Pages
         manualChunks: {
           vendor: ['react', 'react-dom'],
           audio: ['howler'],
-          ui: ['lucide-react', '@radix-ui/react-slider'],
+          ui: ['lucide-react'],
           pwa: ['workbox-window'],
+          utils: ['zustand', 'web-vitals'],
         },
+        // Improve cache efficiency
+        assetFileNames: (assetInfo) => {
+          const info = assetInfo.name?.split('.') || []
+          let extType = info[info.length - 1]
+          if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(extType)) {
+            extType = 'img'
+          } else if (/mp3|ogg|wav|flac/i.test(extType)) {
+            extType = 'audio'
+          }
+          return `assets/${extType}/[name]-[hash][extname]`
+        },
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash].js',
       },
     },
-    // Performance optimizations
+    // Performance optimizations for Cloudflare
     cssCodeSplit: true,
     chunkSizeWarningLimit: 1000,
+    // Optimize for edge deployment
+    target: 'es2020',
+    reportCompressedSize: false,
+    assetsInlineLimit: 4096, // Inline small assets
   },
 })

@@ -112,7 +112,7 @@ class BackgroundSyncManager {
     ) {
       try {
         const registration = await navigator.serviceWorker.ready
-        await registration.sync.register(SYNC_TAG)
+        await registration.sync?.register(SYNC_TAG)
         console.log('Background sync registered')
       } catch (error) {
         console.error('Failed to register background sync:', error)
@@ -146,13 +146,15 @@ class BackgroundSyncManager {
     try {
       switch (task.type) {
         case 'save-preset':
-          await this.syncSavePreset(task.data)
+          await this.syncSavePreset(task.data as Preset)
           break
         case 'update-preset':
-          await this.syncUpdatePreset(task.data)
+          await this.syncUpdatePreset(
+            task.data as { id: string; preset: Preset }
+          )
           break
         case 'delete-preset':
-          await this.syncDeletePreset(task.data)
+          await this.syncDeletePreset(task.data as string)
           break
       }
 
@@ -227,8 +229,10 @@ export const handleBackgroundSync = async (event: Event & { tag: string }) => {
     console.log('Processing background sync...')
 
     // クライアントにメッセージを送信
-    const clients = await self.clients.matchAll()
-    clients.forEach((client) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const clients = await (self as any).clients.matchAll()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    clients.forEach((client: any) => {
       client.postMessage({
         type: 'BACKGROUND_SYNC_START',
       })
@@ -237,7 +241,8 @@ export const handleBackgroundSync = async (event: Event & { tag: string }) => {
     // 同期処理（実際のサーバー通信はここで実装）
     try {
       // 成功時
-      clients.forEach((client) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      clients.forEach((client: any) => {
         client.postMessage({
           type: 'BACKGROUND_SYNC_COMPLETE',
         })
