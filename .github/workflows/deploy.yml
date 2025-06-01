@@ -6,27 +6,67 @@ on:
   pull_request:
     branches: [main]
 
+# Improve performance with concurrency
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js with caching
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'npm'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9
 
+      # Cache pnpm store for faster installs
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Cache TypeScript build info
+      - name: Cache TypeScript build info
+        uses: actions/cache@v4
+        with:
+          path: |
+            tsconfig.tsbuildinfo
+            tsconfig.node.tsbuildinfo
+          key: ${{ runner.os }}-tsc-${{ hashFiles('src/**/*.ts', 'src/**/*.tsx', 'tsconfig.json') }}
+          restore-keys: |
+            ${{ runner.os }}-tsc-
+
+      # Cache ESLint cache
+      - name: Cache ESLint
+        uses: actions/cache@v4
+        with:
+          path: .eslintcache
+          key: ${{ runner.os }}-eslint-${{ hashFiles('.eslintrc*', 'eslint.config.*') }}
+          restore-keys: |
+            ${{ runner.os }}-eslint-
+
       - name: Run linting
-        run: pnpm lint
+        run: pnpm lint --cache
 
       - name: Run type checking
         run: pnpm typecheck
@@ -34,8 +74,30 @@ jobs:
       - name: Run tests
         run: pnpm test
 
+      # Cache Vite build cache
+      - name: Cache Vite build
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules/.vite
+            dist
+          key: ${{ runner.os }}-vite-${{ hashFiles('src/**/*', 'public/**/*', 'vite.config.*') }}
+          restore-keys: |
+            ${{ runner.os }}-vite-
+
       - name: Build application
         run: pnpm build
+
+      # Upload build artifacts for reuse in deployment jobs
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-output
+          path: |
+            dist/
+            worker/
+            wrangler.toml
+          retention-days: 1
 
   deploy-preview:
     runs-on: ubuntu-latest
@@ -47,21 +109,50 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js with caching
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'npm'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9
 
+      # Reuse pnpm cache
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build application
-        run: pnpm build
+      # Download build artifacts instead of rebuilding
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+
+      # Cache Wrangler
+      - name: Cache Wrangler
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.config/.wrangler
+            .wrangler
+          key: ${{ runner.os }}-wrangler-${{ hashFiles('wrangler.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-wrangler-
 
       - name: Upload assets to KV
         env:
@@ -88,21 +179,50 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js with caching
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'npm'
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9
 
+      # Reuse pnpm cache
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build application
-        run: pnpm build
+      # Download build artifacts instead of rebuilding
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-output
+
+      # Cache Wrangler
+      - name: Cache Wrangler
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.config/.wrangler
+            .wrangler
+          key: ${{ runner.os }}-wrangler-${{ hashFiles('wrangler.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-wrangler-
 
       - name: Upload assets to KV
         env:
@@ -120,3 +240,8 @@ jobs:
         run: |
           echo "🚀 AmbientFlow deployed successfully to production!"
           echo "🌐 URL: https://ambient-flow.your-domain.workers.dev"
+
+      # Clean up artifacts after successful deployment
+      - name: Clean up artifacts
+        if: always()
+        run: echo "Deployment completed. Artifacts will auto-expire in 1 day."
