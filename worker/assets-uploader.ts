@@ -125,7 +125,7 @@ export async function uploadAssets(options: UploadOptions): Promise<void> {
 }
 
 // CLI runner
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   const options: UploadOptions = {
     kvNamespaceId: process.env.CLOUDFLARE_KV_NAMESPACE_ID || '',
     apiToken: process.env.CLOUDFLARE_API_TOKEN || '',
