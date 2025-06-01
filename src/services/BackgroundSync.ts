@@ -229,8 +229,10 @@ export const handleBackgroundSync = async (event: Event & { tag: string }) => {
     console.log('Processing background sync...')
 
     // クライアントにメッセージを送信
-    const clients = await (self as ServiceWorkerGlobalScope).clients.matchAll()
-    clients.forEach((client: Client) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const clients = await (self as any).clients.matchAll()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    clients.forEach((client: any) => {
       client.postMessage({
         type: 'BACKGROUND_SYNC_START',
       })
@@ -239,7 +241,8 @@ export const handleBackgroundSync = async (event: Event & { tag: string }) => {
     // 同期処理（実際のサーバー通信はここで実装）
     try {
       // 成功時
-      clients.forEach((client: Client) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      clients.forEach((client: any) => {
         client.postMessage({
           type: 'BACKGROUND_SYNC_COMPLETE',
         })
