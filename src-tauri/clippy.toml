@@ -1,9 +1,0 @@
-# Clippy configuration for AmbientFlow
-
-# 警告レベル設定
-warn-on-all-wildcard-imports = true
-allow-unwrap-in-tests = true
-
-# 複雑さの閾値
-too-many-arguments-threshold = 7
-cognitive-complexity-threshold = 25
