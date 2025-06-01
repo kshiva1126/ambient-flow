@@ -143,7 +143,7 @@ describe('App', () => {
       'p-8'
     )
 
-    const gridContainer = screen.getAllByTestId(/^sound-/)[0].parentElement
+    const gridContainer = screen.getAllByTestId(/^sound-/)[0]?.parentElement
     expect(gridContainer).toHaveClass(
       'grid',
       'grid-cols-2',
