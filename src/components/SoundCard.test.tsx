@@ -50,8 +50,15 @@ describe('SoundCard', () => {
     )
 
     const cardElement = screen.getByTestId('sound-test-sound')
-    expect(cardElement).toHaveClass('border-blue-500')
-    expect(cardElement).toHaveClass('bg-blue-500/10')
+    expect(cardElement).toHaveClass(
+      'bg-gradient-to-br',
+      'from-blue-500/20',
+      'to-purple-500/20'
+    )
+    expect(cardElement).toHaveClass(
+      'scale-[1.02]',
+      'animate-[glow_2s_ease-in-out_infinite]'
+    )
   })
 
   it('should apply default styles when isPlaying is false', () => {
@@ -66,8 +73,8 @@ describe('SoundCard', () => {
     )
 
     const cardElement = screen.getByTestId('sound-test-sound')
-    expect(cardElement).toHaveClass('border-gray-700')
-    expect(cardElement).toHaveClass('bg-gray-800')
+    expect(cardElement).toHaveClass('bg-white/5')
+    expect(cardElement).toHaveClass('hover:bg-white/10', 'hover:scale-[1.05]')
   })
 
   it('should call onToggle when card is clicked', () => {
@@ -132,7 +139,9 @@ describe('SoundCard', () => {
       />
     )
 
-    expect(screen.getByText('65%')).toBeInTheDocument()
+    expect(screen.getByTestId('volume-display-test-sound')).toHaveTextContent(
+      '65%'
+    )
   })
 
   it('should render SoundIcon with correct props', () => {
