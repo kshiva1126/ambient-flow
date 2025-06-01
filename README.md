@@ -1,82 +1,101 @@
-# AmbientFlow
+# AmbientFlow 🎵
 
-AmbientFlowは、複数の環境音を同時再生し、各音源の音量を個別に調整できるクロスプラットフォーム対応デスクトップアプリケーションです。操作性と安定性を最重視した設計となっています。
+AmbientFlowは、複数の環境音を同時再生できるプログレッシブWebアプリ（PWA）です。Cloudflare Workersでエッジ配信され、高速で安定した環境音体験を提供します。
+
+[![Deploy to Cloudflare Workers](https://github.com/kshiva1126/ambient-flow/actions/workflows/deploy.yml/badge.svg)](https://github.com/kshiva1126/ambient-flow/actions/workflows/deploy.yml)
 
 ## ✨ 主な機能
 
-- 🎵 **複数音源の同時再生** - 最大14種類の環境音を同時に再生
+- 🎵 **複数音源の同時再生** - 最大15種類の環境音を同時に再生
 - 🎚️ **個別音量調整** - 各音源の音量を0-100%で独立して調整
 - 💾 **プリセット機能** - 音源の組み合わせと音量設定を保存・読み込み
+- 📱 **PWA対応** - ホーム画面に追加してアプリのように使用可能
+- 🌐 **オフライン対応** - インターネット接続なしでも利用可能
 - 🌙 **ダークテーマUI** - 目に優しいダークインターフェース
-- ⚡ **高パフォーマンス** - CPU使用率<5%、メモリ使用量<150MB
-- 🔒 **固定ウィンドウサイズ** - 1200x800pxの最適化されたレイアウト
+- ⚡ **エッジ配信** - Cloudflare Workersによる高速配信
+- 🔄 **自動更新** - 新バージョンの自動通知・更新
 
 ## 🎶 音源ラインナップ
 
-### 自然音
+### 🌿 自然音
 
-- Rain（雨音）
-- Storm（嵐）
-- Wind（風音）
-- Waves（波音）
-- Stream（小川）
-- Birds（鳥のさえずり）
+- **Rain**（雨音） - 穏やかな雨音
+- **Waves**（波音） - 海岸の波音
+- **Stream**（小川） - 小川のせせらぎ
+- **Birds**（鳥） - 鳥のさえずり
+- **Thunder**（雷雨） - 雷雨と嵐
+- **Wind**（風） - そよ風の音
+- **Summer Night**（夏の夜） - 虫の音が響く夏の夜
 
-### 人工音
+### 🏠 室内音
 
-- Train（電車音）
-- Boat（船音）
-- City（都市音）
-- Coffee Shop（カフェ音）
-- Fireplace（暖炉音）
+- **Fireplace**（暖炉） - 暖炉の炎の音
 
-### ノイズ
+### 🏙️ 都市音
 
-- Pink Noise（ピンクノイズ）
-- White Noise（ホワイトノイズ）
-- Summer Night（夏の夜音）
+- **Cafe**（カフェ） - カフェの環境音
+- **City**（都市） - 都市の環境音
+- **Train**（電車） - 電車の走行音
+- **Boat**（ボート） - ボートのエンジン音
+
+### 🎵 ノイズ
+
+- **White Noise**（ホワイトノイズ） - 集中力を高めるホワイトノイズ
+- **Pink Noise**（ピンクノイズ） - 心地よいピンクノイズ
+- **Brown Noise**（ブラウンノイズ） - 深いリラックスのためのブラウンノイズ
+
+## 🌐 アプリを使用する
+
+### オンライン版
+
+**[AmbientFlow を開く](https://ambient-flow.kshiva1126.workers.dev)** - ブラウザですぐに利用
+
+### PWAインストール
+
+1. 上記URLにアクセス
+2. ブラウザの「ホーム画面に追加」またはインストールプロンプトをクリック
+3. デスクトップアプリのように使用可能
 
 ## 🛠️ 技術スタック
 
-### フレームワーク・言語
+### フロントエンド
 
-- **メインフレームワーク**: Tauri v2.x
-- **フロントエンド**: React 19 + TypeScript 5.8
-- **バックエンド**: Rust
+- **フレームワーク**: React 19 + TypeScript 5.8
 - **ビルドツール**: Vite 6.x
+- **PWA**: VitePWA + Workbox
+- **音声**: Howler.js 2.x
+- **状態管理**: Zustand 5.x
 
 ### UI・スタイリング
 
 - **CSSフレームワーク**: TailwindCSS 4.x
-- **アニメーション**: Motion (旧Framer Motion) 12.x
+- **アニメーション**: Motion 12.x
 - **アイコン**: Lucide React
 - **テーマ**: ダークテーマベース
 
-### 音声処理
+### インフラ・デプロイ
 
-- **音声ライブラリ**: Howler.js 2.x
-- **対応フォーマット**: MP3, OGG, WAV
-
-### 状態管理・データ
-
-- **状態管理**: Zustand 5.x
-- **データ永続化**: Tauri v2 store API
+- **ホスティング**: Cloudflare Workers
+- **エッジキャッシング**: Cloudflare KV
+- **CI/CD**: GitHub Actions
+- **パフォーマンス監視**: Core Web Vitals
 
 ### 開発ツール
 
-- **Linter**: ESLint 9.x + Clippy
-- **Formatter**: Prettier + rustfmt
+- **Linter**: ESLint 9.x
+- **Formatter**: Prettier 3.x
 - **Pre-commit**: Husky + lint-staged
+- **テスト**: Vitest + Testing Library
+- **E2E**: Playwright
 
-## 🚀 セットアップ
+## 🚀 開発セットアップ
 
 ### 前提条件
 
-- **Node.js**: v18以上
-- **pnpm**: v8以上
-- **Rust**: v1.77.2以上（Tauri用）
+- **Node.js**: v20以上
+- **pnpm**: v9以上
 
-### インストール手順
+### セットアップ手順
 
 1. **リポジトリのクローン**
 
@@ -91,20 +110,15 @@ AmbientFlowは、複数の環境音を同時再生し、各音源の音量を個
    pnpm install
    ```
 
-3. **Rustセットアップ（初回のみ）**
+3. **開発サーバーの起動**
 
    ```bash
-   # Rustのインストール（未インストールの場合）
-   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-   source ~/.cargo/env
-
-   # Tauri CLIのインストール
-   cargo install tauri-cli --version "^2.0.0"
+   pnpm dev
    ```
 
-4. **開発サーバーの起動**
-   ```bash
-   pnpm tauri dev
+4. **ブラウザでアクセス**
+   ```
+   http://localhost:5173
    ```
 
 ## 💻 開発コマンド
@@ -113,56 +127,50 @@ AmbientFlowは、複数の環境音を同時再生し、各音源の音量を個
 
 ```bash
 # 開発サーバー起動
-pnpm dev                # Vite開発サーバー
-pnpm tauri dev          # Tauri開発モード（推奨）
+pnpm dev                    # Vite開発サーバー
 
 # ビルド
-pnpm build              # フロントエンドビルド
-pnpm tauri build        # アプリケーションビルド
-
-# プレビュー
-pnpm preview            # Viteプレビューサーバー
+pnpm build                  # 本番ビルド
+pnpm preview                # ビルド結果のプレビュー
 ```
 
 ### コード品質管理
 
 ```bash
-# TypeScript/JavaScript
-pnpm lint               # ESLintチェック
-pnpm lint:fix           # ESLint自動修正
-pnpm format             # Prettierフォーマット実行
-pnpm format:check       # Prettierフォーマットチェック
-pnpm typecheck          # TypeScript型チェック
-
-# Rust
-pnpm rust:fmt           # Rustフォーマット実行
-pnpm rust:fmt:check     # Rustフォーマットチェック
-pnpm rust:clippy        # Rustコード品質チェック
-pnpm rust:check         # Rustコンパイルチェック
+# Lint & Format
+pnpm lint                   # ESLintチェック
+pnpm lint:fix              # ESLint自動修正
+pnpm format                # Prettierフォーマット実行
+pnpm format:check          # Prettierフォーマットチェック
+pnpm typecheck             # TypeScript型チェック
 ```
 
-## 📝 開発ガイドライン
+### テスト
 
-### コーディング規約
+```bash
+# 単体テスト
+pnpm test                  # Vitestテスト実行
+pnpm test:ui               # テストUIで実行
+pnpm test:coverage         # カバレッジ付きテスト
 
-- **TypeScript**: 厳格な型チェック（strict: true）
-- **関数型コンポーネント**: Reactコンポーネントは関数型で実装
-- **カスタムフック**: ロジックの分離にカスタムフックを活用
-- **Rustコード**: clippyのpedantic/nurseryレベルに準拠
+# E2Eテスト
+pnpm test:e2e              # Playwrightテスト実行
+pnpm test:e2e:ui           # テストUIで実行
+pnpm test:e2e:debug        # デバッグモードで実行
+```
 
-### コミット規約
+### Cloudflare Workers
 
-- **Pre-commitフック**: 自動的にlint・formatが実行されます
-- **コミットメッセージ**: conventional commitsに従う
-- **ブランチ運用**: feature/issue-{番号}-{説明} の形式
+```bash
+# ログイン・設定
+pnpm cf:login              # Cloudflareにログイン
+pnpm cf:dev                # ローカルWorker開発サーバー
 
-### 開発フロー
-
-1. **Issue作成**: GitHub Issuesで課題を管理
-2. **ブランチ作成**: `feature/issue-{番号}-{説明}`
-3. **実装**: コーディング規約に従って実装
-4. **プルリクエスト**: 実装完了後にPR作成
-5. **レビュー**: コードレビュー後にマージ
+# デプロイ
+pnpm deploy                # 本番デプロイ
+pnpm deploy:preview        # プレビューデプロイ
+pnpm deploy:assets         # アセットのみアップロード
+```
 
 ## 🏗️ プロジェクト構造
 
@@ -172,69 +180,109 @@ ambient-flow/
 │   ├── components/         # Reactコンポーネント
 │   ├── hooks/             # カスタムフック
 │   ├── stores/            # Zustand状態管理
+│   ├── services/          # サービスクラス
 │   ├── types/             # TypeScript型定義
 │   ├── utils/             # ユーティリティ関数
 │   └── assets/            # 静的ファイル
-├── src-tauri/             # Tauriバックエンド
-│   ├── src/               # Rustソースコード
-│   ├── icons/             # アプリアイコン
-│   ├── Cargo.toml         # Rust設定
-│   ├── rustfmt.toml       # Rustフォーマット設定
-│   └── clippy.toml        # Clippy設定
 ├── public/                # 公開ファイル
-├── docs/                  # ドキュメント
-├── .husky/                # Pre-commitフック
-├── package.json           # Node.js設定
-├── tsconfig.json          # TypeScript設定
-├── vite.config.ts         # Vite設定
-├── tailwind.config.js     # TailwindCSS設定
-└── README.md              # このファイル
+│   └── assets/           # PWA用アセット
+├── worker/               # Cloudflare Workers
+│   ├── index.ts          # メインWorkerスクリプト
+│   └── assets-uploader.ts # アセットアップローダー
+├── .github/              # GitHub Actions
+│   └── workflows/        # CI/CDワークフロー
+├── e2e/                  # E2Eテスト
+├── deployment-guide.md   # デプロイガイド
+├── wrangler.toml         # Cloudflare Workers設定
+└── README.md             # このファイル
 ```
 
-## 🎯 パフォーマンス目標
+## 📊 パフォーマンス目標
 
-### 応答性
+### Core Web Vitals
 
-- UI操作レスポンス: < 100ms
-- 音声開始遅延: < 200ms
-- プリセット切り替え: < 500ms
+- **LCP** (Largest Contentful Paint): < 2.5s
+- **FID** (First Input Delay): < 100ms
+- **CLS** (Cumulative Layout Shift): < 0.1
 
-### リソース効率
+### PWA目標
 
-- メモリ使用量: < 150MB
-- CPU使用率: < 5%（再生時）
-- バッテリー消費: 最小限
+- **キャッシュヒット率**: > 95%
+- **オフライン利用率**: 100%
+- **インストール率**: > 30%
 
-### 安定性
+### 音声処理
 
-- 連続稼働時間: 24時間以上
-- クラッシュ率: < 0.1%
-- エラー復旧: 自動
+- **音声開始遅延**: < 200ms
+- **音質**: ロスレス配信
+- **同時再生**: 最大15音源
+
+## 🔧 設定・カスタマイズ
+
+### 環境変数
+
+```bash
+# Cloudflare Workers用（本番のみ）
+CLOUDFLARE_API_TOKEN=your-api-token
+CLOUDFLARE_ACCOUNT_ID=your-account-id
+CLOUDFLARE_KV_NAMESPACE_ID=your-kv-namespace-id
+```
+
+### PWA設定
+
+- **manifest.json**: PWAメタデータ
+- **Service Worker**: オフライン対応とキャッシング
+- **アイコン**: 192x192, 512x512 PWAアイコン
+
+## 🚀 デプロイ
+
+### 自動デプロイ（推奨）
+
+1. **GitHub Secrets設定**: Cloudflare認証情報を追加
+2. **mainブランチプッシュ**: 自動的に本番デプロイ
+3. **PRマージ**: プレビュー環境でテスト
+
+### 手動デプロイ
+
+詳細は [deployment-guide.md](./deployment-guide.md) を参照
 
 ## 📖 ドキュメント
 
 - **[開発ガイド](./CLAUDE.md)**: 詳細な開発ガイドライン
-- **[アプリ仕様書](./ambient_sound_app_spec.md)**: 機能仕様の詳細
-- **[作業ログ](./work-log.txt)**: 開発作業の記録
+- **[デプロイガイド](./deployment-guide.md)**: Cloudflare Workersデプロイ手順
+- **[E2Eテストガイド](./E2E_TEST_PLAN.md)**: E2Eテスト実行方法
+- **[統合テスト](./INTEGRATION_TEST_CHECKLIST.md)**: 統合テストチェックリスト
 
-## 🤝 貢献ガイドライン
+## 🤝 貢献方法
 
-1. **Issues**: バグ報告や機能提案はGitHub Issuesをご利用ください
-2. **Pull Requests**: 実装前にIssueでの議論をお願いします
-3. **コーディング規約**: 既存のコードスタイルに従ってください
-4. **テスト**: 新機能には適切なテストを追加してください
+1. **Issues**: バグ報告や機能提案はGitHub Issuesで
+2. **Fork & PR**: 実装はフォーク後にプルリクエスト
+3. **テスト**: 新機能にはテストを追加
+4. **ドキュメント**: 機能追加時はドキュメントも更新
+
+### 開発フロー
+
+1. Issue作成 → 2. ブランチ作成 → 3. 実装 → 4. テスト → 5. PR作成
 
 ## 📄 ライセンス
 
-このプロジェクトのライセンスは検討中です。
+MIT License - 詳細は [LICENSE](./LICENSE) ファイルを参照
 
 ## 🔗 関連リンク
 
-- [Tauri Documentation](https://tauri.app/)
+- **[Live Demo](https://ambient-flow.kshiva1126.workers.dev)** - 本番環境
+- **[GitHub Issues](https://github.com/kshiva1126/ambient-flow/issues)** - バグ報告・機能要望
+- **[GitHub Actions](https://github.com/kshiva1126/ambient-flow/actions)** - CI/CD状況
+
+### 技術ドキュメント
+
 - [React Documentation](https://react.dev/)
-- [TypeScript Documentation](https://www.typescriptlang.org/)
-- [TailwindCSS Documentation](https://tailwindcss.com/)
+- [Vite Documentation](https://vitejs.dev/)
+- [Cloudflare Workers](https://developers.cloudflare.com/workers/)
+- [PWA Guidelines](https://web.dev/progressive-web-apps/)
 
 ---
 
-AmbientFlowで快適な作業・リラックス環境を作りましょう！ 🎵
+**🎵 AmbientFlowで理想的な音環境を作りましょう！**
+
+作業・勉強・リラックス・睡眠など、あらゆるシーンに最適な環境音をお楽しみください。
