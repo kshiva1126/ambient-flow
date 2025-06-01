@@ -1,4 +1,4 @@
-import type { SoundSource } from './sound'
+import type { SoundSource, Preset } from './sound'
 
 /**
  * 音源の再生状態を表すインターフェース
@@ -18,9 +18,12 @@ export interface AudioStoreState {
   // 状態
   sounds: Record<string, SoundState>
   playingSounds: string[]
+  presets: Preset[]
+  currentPresetId: string | null
+  isLoadingPresets: boolean
 
   // アクション
-  loadSound: (source: SoundSource) => void
+  loadSound: (source: SoundSource) => Promise<void>
   unloadSound: (soundId: string) => void
   play: (soundId: string) => void
   stop: (soundId: string) => void
@@ -28,6 +31,18 @@ export interface AudioStoreState {
   setVolume: (soundId: string, volume: number) => void
   fadeIn: (soundId: string, duration?: number) => void
   fadeOut: (soundId: string, duration?: number) => void
+
+  // プリセット関連
+  loadPresets: () => Promise<void>
+  savePreset: (name: string, description?: string) => Promise<void>
+  loadPreset: (presetId: string) => Promise<void>
+  deletePreset: (presetId: string) => Promise<void>
+  updatePreset: (
+    presetId: string,
+    name: string,
+    description?: string
+  ) => Promise<void>
+  getCurrentPreset: () => Preset | null
 
   // セレクター（computed values）
   isPlaying: (soundId: string) => boolean
