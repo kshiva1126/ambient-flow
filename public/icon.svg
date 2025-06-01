@@ -1,0 +1,52 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with gradient -->
+  <defs>
+    <radialGradient id="bg-gradient-large" cx="0.5" cy="0.3" r="0.8">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#1e40af"/>
+    </radialGradient>
+    <linearGradient id="wave-gradient-large" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+      <stop offset="50%" stop-color="#ffffff" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.5"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <circle cx="128" cy="128" r="120" fill="url(#bg-gradient-large)" stroke="#1e40af" stroke-width="8"/>
+  
+  <!-- Sound waves -->
+  <path d="M64 128 Q96 96, 128 128 T192 128" 
+        stroke="url(#wave-gradient-large)" 
+        stroke-width="12" 
+        fill="none" 
+        stroke-linecap="round"/>
+  
+  <path d="M48 128 Q88 80, 128 128 T208 128" 
+        stroke="url(#wave-gradient-large)" 
+        stroke-width="8" 
+        fill="none" 
+        stroke-linecap="round" 
+        opacity="0.8"/>
+  
+  <path d="M32 128 Q80 64, 128 128 T224 128" 
+        stroke="url(#wave-gradient-large)" 
+        stroke-width="6" 
+        fill="none" 
+        stroke-linecap="round" 
+        opacity="0.6"/>
+  
+  <path d="M80 128 Q104 112, 128 128 T176 128" 
+        stroke="url(#wave-gradient-large)" 
+        stroke-width="8" 
+        fill="none" 
+        stroke-linecap="round" 
+        opacity="0.7"/>
+  
+  <!-- Center point (sound source) -->
+  <circle cx="128" cy="128" r="16" fill="#ffffff" opacity="0.95"/>
+  <circle cx="128" cy="128" r="8" fill="#60a5fa"/>
+  
+  <!-- Subtle glow effect -->
+  <circle cx="128" cy="128" r="24" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.3"/>
+</svg>
