@@ -29,21 +29,11 @@ export const createImageLazyLoader = () => {
  * Preload critical resources
  */
 export const preloadCriticalResources = () => {
-  // Preload critical fonts
-  const fontLink = document.createElement('link')
-  fontLink.rel = 'preload'
-  fontLink.as = 'font'
-  fontLink.type = 'font/woff2'
-  fontLink.crossOrigin = 'anonymous'
-  fontLink.href = '/fonts/inter-var.woff2'
-  document.head.appendChild(fontLink)
+  // Skip font preloading - using system fonts for better performance
+  // Skip CSS preloading - handled by build process
 
-  // Preload critical CSS
-  const cssLink = document.createElement('link')
-  cssLink.rel = 'preload'
-  cssLink.as = 'style'
-  cssLink.href = '/src/index.css'
-  document.head.appendChild(cssLink)
+  // Only preload actual critical resources that exist
+  console.log('Using system fonts for optimal performance')
 }
 
 /**
