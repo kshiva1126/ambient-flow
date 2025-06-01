@@ -157,14 +157,14 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_KV_NAMESPACE_ID: ${{ secrets.CLOUDFLARE_KV_NAMESPACE_PREVIEW_ID }}
-        run: pnpm deploy:assets
+        run: npx tsx worker/assets-uploader.ts
 
       - name: Deploy to Cloudflare Workers (Preview)
         id: deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
-          pnpm deploy:preview
+          npx wrangler deploy --env preview
           echo "url=https://ambient-flow-preview.your-domain.workers.dev" >> $GITHUB_OUTPUT
 
   deploy-production:
@@ -226,12 +226,12 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_KV_NAMESPACE_ID: ${{ secrets.CLOUDFLARE_KV_NAMESPACE_ID }}
-        run: pnpm deploy:assets
+        run: npx tsx worker/assets-uploader.ts
 
       - name: Deploy to Cloudflare Workers (Production)
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: pnpm deploy
+        run: npx wrangler deploy
 
       - name: Notify deployment success
         run: |
