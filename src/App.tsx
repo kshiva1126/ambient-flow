@@ -1,17 +1,38 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import './App.css'
 import { useAudioStore } from './stores/audioStore'
 import { SOUND_SOURCES } from './data/sounds'
 import { SoundCard } from './components/SoundCard'
 import { PlayingCounter } from './components/PlayingCounter'
-import {
-  OfflineIndicator,
-  OfflineFeatureGuide,
-} from './components/OfflineIndicator'
-import { InstallPrompt, InstallSuccessGuide } from './components/InstallPrompt'
-import { UpdateNotification } from './components/UpdateNotification'
 import { AppLoadingScreen, PreloadStatus } from './components/LoadingStates'
 import { performanceMonitor } from './utils/pwaHelpers'
+
+// Lazy load non-critical components
+const OfflineIndicator = lazy(() =>
+  import('./components/OfflineIndicator').then((m) => ({
+    default: m.OfflineIndicator,
+  }))
+)
+const OfflineFeatureGuide = lazy(() =>
+  import('./components/OfflineIndicator').then((m) => ({
+    default: m.OfflineFeatureGuide,
+  }))
+)
+const InstallPrompt = lazy(() =>
+  import('./components/InstallPrompt').then((m) => ({
+    default: m.InstallPrompt,
+  }))
+)
+const InstallSuccessGuide = lazy(() =>
+  import('./components/InstallPrompt').then((m) => ({
+    default: m.InstallSuccessGuide,
+  }))
+)
+const UpdateNotification = lazy(() =>
+  import('./components/UpdateNotification').then((m) => ({
+    default: m.UpdateNotification,
+  }))
+)
 
 function App() {
   const {
@@ -39,12 +60,19 @@ function App() {
         // パフォーマンス測定開始
         const startTime = performance.now()
 
-        // プリセットを読み込み
-        await loadPresets()
+        // プリセットを読み込み（非ブロッキング）
+        loadPresets().catch(console.error)
+
+        // 高優先度の音源を最初に読み込む
+        const highPrioritySounds = ['rain', 'waves', 'fireplace', 'white-noise']
+        const prioritizedSources = [
+          ...SOUND_SOURCES.filter((s) => highPrioritySounds.includes(s.id)),
+          ...SOUND_SOURCES.filter((s) => !highPrioritySounds.includes(s.id)),
+        ]
 
         // 音源を順次読み込み
-        for (let i = 0; i < SOUND_SOURCES.length; i++) {
-          const source = SOUND_SOURCES[i]
+        for (let i = 0; i < prioritizedSources.length; i++) {
+          const source = prioritizedSources[i]
           if (source) {
             setCurrentLoadingSound(source.name)
 
@@ -103,11 +131,13 @@ function App() {
   return (
     <div className="min-h-screen text-white">
       {/* PWA通知エリア */}
-      <div className="fixed top-4 left-4 right-4 z-50 space-y-3">
-        <UpdateNotification />
-        <OfflineIndicator />
-        <InstallPrompt />
-      </div>
+      <Suspense fallback={null}>
+        <div className="fixed top-4 left-4 right-4 z-50 space-y-3">
+          <UpdateNotification />
+          <OfflineIndicator />
+          <InstallPrompt />
+        </div>
+      </Suspense>
 
       {/* ヘッダー部分 */}
       <header className="relative mb-12 pt-8">
@@ -120,9 +150,11 @@ function App() {
       </header>
 
       {/* オフライン機能ガイド */}
-      <div className="max-w-6xl mx-auto px-4 mb-6">
-        <OfflineFeatureGuide />
-      </div>
+      <Suspense fallback={null}>
+        <div className="max-w-6xl mx-auto px-4 mb-6">
+          <OfflineFeatureGuide />
+        </div>
+      </Suspense>
 
       <PlayingCounter count={getPlayingCount()} />
 
@@ -166,7 +198,9 @@ function App() {
       </footer>
 
       {/* PWAインストール成功ガイド */}
-      <InstallSuccessGuide />
+      <Suspense fallback={null}>
+        <InstallSuccessGuide />
+      </Suspense>
     </div>
   )
 }

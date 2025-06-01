@@ -46,6 +46,9 @@ export default defineConfig({
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
               },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
             },
           },
           {
@@ -57,9 +60,40 @@ export default defineConfig({
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
               },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+              rangeRequests: true,
+            },
+          },
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'image-cache',
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+              },
+            },
+          },
+          {
+            urlPattern: /\.(?:js|css)$/,
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'static-resources',
+              expiration: {
+                maxEntries: 60,
+                maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+              },
             },
           },
         ],
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
+        navigateFallback: 'index.html',
+        navigateFallbackDenylist: [/^\/_/, /\/[^/?]+\.[^/]+$/],
       },
     }),
   ],
@@ -73,7 +107,26 @@ export default defineConfig({
   envPrefix: ['VITE_'],
   build: {
     outDir: 'dist',
-    minify: 'esbuild',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+      },
+    },
     sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          audio: ['howler'],
+          ui: ['lucide-react', '@radix-ui/react-slider'],
+          pwa: ['workbox-window'],
+        },
+      },
+    },
+    // Performance optimizations
+    cssCodeSplit: true,
+    chunkSizeWarningLimit: 1000,
   },
 })

@@ -322,4 +322,44 @@ self.addEventListener('idle', () => {
   })
 })
 
+// Background Syncイベントの処理
+self.addEventListener('sync', (event) => {
+  console.log('Background sync event:', event.tag)
+
+  if (event.tag === 'preset-sync') {
+    event.waitUntil(handlePresetSync())
+  }
+})
+
+/**
+ * プリセット同期の処理
+ */
+async function handlePresetSync() {
+  try {
+    // クライアントに同期開始を通知
+    const clients = await self.clients.matchAll()
+    clients.forEach((client) => {
+      client.postMessage({
+        type: 'BACKGROUND_SYNC_START',
+      })
+    })
+
+    // 実際の同期処理（現在はローカルストレージのみなので省略）
+    // 将来的にサーバー同期を実装する場合はここで処理
+
+    // 同期完了を通知
+    clients.forEach((client) => {
+      client.postMessage({
+        type: 'BACKGROUND_SYNC_COMPLETE',
+      })
+    })
+
+    return Promise.resolve()
+  } catch (error) {
+    console.error('Background sync failed:', error)
+    // エラーの場合は自動的にリトライされる
+    throw error
+  }
+}
+
 console.log('Service Worker script loaded')
