@@ -40,10 +40,10 @@ describe('AudioStore', () => {
       useAudioStore.setState({ sounds: {}, playingSounds: [] })
     })
 
-    it('should load a sound source', () => {
+    it('should load a sound source', async () => {
       const { loadSound, getSoundState } = useAudioStore.getState()
 
-      loadSound(mockSoundSource)
+      await loadSound(mockSoundSource)
 
       const soundState = getSoundState('test-sound')
       expect(soundState).toBeDefined()
@@ -54,11 +54,11 @@ describe('AudioStore', () => {
       expect(soundState?.isLoaded).toBe(true)
     })
 
-    it('should not reload an already loaded sound', () => {
+    it('should not reload an already loaded sound', async () => {
       const { loadSound } = useAudioStore.getState()
 
-      loadSound(mockSoundSource)
-      loadSound(mockSoundSource) // Try loading again
+      await loadSound(mockSoundSource)
+      await loadSound(mockSoundSource) // Try loading again
 
       const { sounds } = useAudioStore.getState()
       expect(Object.keys(sounds)).toHaveLength(1)
@@ -66,10 +66,10 @@ describe('AudioStore', () => {
   })
 
   describe('play', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       useAudioStore.setState({ sounds: {}, playingSounds: [] })
       const { loadSound } = useAudioStore.getState()
-      loadSound(mockSoundSource)
+      await loadSound(mockSoundSource)
     })
 
     it('should play a loaded sound', () => {
@@ -105,10 +105,10 @@ describe('AudioStore', () => {
   })
 
   describe('stop', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       useAudioStore.setState({ sounds: {}, playingSounds: [] })
       const { loadSound, play } = useAudioStore.getState()
-      loadSound(mockSoundSource)
+      await loadSound(mockSoundSource)
       play('test-sound')
     })
 
@@ -133,15 +133,15 @@ describe('AudioStore', () => {
   })
 
   describe('stopAll', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       useAudioStore.setState({ sounds: {}, playingSounds: [] })
       const { loadSound, play } = useAudioStore.getState()
 
       const source1 = { ...mockSoundSource, id: 'sound1' }
       const source2 = { ...mockSoundSource, id: 'sound2' }
 
-      loadSound(source1)
-      loadSound(source2)
+      await loadSound(source1)
+      await loadSound(source2)
       play('sound1')
       play('sound2')
     })
@@ -159,9 +159,9 @@ describe('AudioStore', () => {
   })
 
   describe('setVolume', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       const { loadSound } = useAudioStore.getState()
-      loadSound(mockSoundSource)
+      await loadSound(mockSoundSource)
     })
 
     it('should set volume for a loaded sound', () => {
@@ -192,10 +192,10 @@ describe('AudioStore', () => {
   })
 
   describe('fadeIn', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       useAudioStore.setState({ sounds: {}, playingSounds: [] })
       const { loadSound } = useAudioStore.getState()
-      loadSound(mockSoundSource)
+      await loadSound(mockSoundSource)
     })
 
     it('should start playing and fade in', () => {
@@ -218,9 +218,9 @@ describe('AudioStore', () => {
   })
 
   describe('fadeOut', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       const { loadSound, play } = useAudioStore.getState()
-      loadSound(mockSoundSource)
+      await loadSound(mockSoundSource)
       play('test-sound')
     })
 
@@ -249,9 +249,9 @@ describe('AudioStore', () => {
   })
 
   describe('unloadSound', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       const { loadSound } = useAudioStore.getState()
-      loadSound(mockSoundSource)
+      await loadSound(mockSoundSource)
     })
 
     it('should unload a sound', () => {
@@ -273,9 +273,9 @@ describe('AudioStore', () => {
   })
 
   describe('selectors', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       const { loadSound } = useAudioStore.getState()
-      loadSound(mockSoundSource)
+      await loadSound(mockSoundSource)
     })
 
     it('should return correct playing state', () => {
@@ -296,12 +296,11 @@ describe('AudioStore', () => {
       expect(getVolume('test-sound')).toBe(80)
     })
 
-    it('should return correct playing count', () => {
-      const { play, getPlayingCount } = useAudioStore.getState()
+    it('should return correct playing count', async () => {
+      const { play, getPlayingCount, loadSound } = useAudioStore.getState()
       const source2 = { ...mockSoundSource, id: 'sound2' }
-      const { loadSound } = useAudioStore.getState()
 
-      loadSound(source2)
+      await loadSound(source2)
 
       expect(getPlayingCount()).toBe(0)
 
