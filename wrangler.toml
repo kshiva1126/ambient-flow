@@ -4,13 +4,7 @@ main = "worker/index.ts"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 
-# Worker configuration
-[env.production]
-name = "ambient-flow"
-routes = [
-  { pattern = "ambient-flow.your-domain.com/*", zone_name = "your-domain.com" }
-]
-
+# Environment configuration
 [env.preview]
 name = "ambient-flow-preview"
 
@@ -43,11 +37,7 @@ name = "ambient-flow-dev"
 ENVIRONMENT = "development"
 APP_NAME = "AmbientFlow Dev"
 
-# Build configuration
-[build]
-command = "pnpm build"
-cwd = "."
-watch_dir = ["src", "worker"]
+# Note: Build is handled by GitHub Actions
 
 # Limits and optimization (removed for Free plan compatibility)
 # [limits]
