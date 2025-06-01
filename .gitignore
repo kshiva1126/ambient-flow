@@ -34,3 +34,5 @@ src-tauri/target/
 
 # Coverage reports
 /coverage/
+# UI improvement work files
+UI_IMPROVEMENT_*.md
