@@ -28,15 +28,18 @@ const mockSoundSource: SoundSource = {
 describe('AudioStore', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    // Reset store state
-    useAudioStore.setState({ sounds: {}, playingSounds: [] })
   })
 
   afterEach(() => {
+    // Reset store state after each test
     useAudioStore.setState({ sounds: {}, playingSounds: [] })
   })
 
   describe('loadSound', () => {
+    beforeEach(() => {
+      useAudioStore.setState({ sounds: {}, playingSounds: [] })
+    })
+
     it('should load a sound source', () => {
       const { loadSound, getSoundState } = useAudioStore.getState()
 
@@ -64,17 +67,19 @@ describe('AudioStore', () => {
 
   describe('play', () => {
     beforeEach(() => {
+      useAudioStore.setState({ sounds: {}, playingSounds: [] })
       const { loadSound } = useAudioStore.getState()
       loadSound(mockSoundSource)
     })
 
     it('should play a loaded sound', () => {
-      const { play, isPlaying, playingSounds } = useAudioStore.getState()
+      const { play, isPlaying } = useAudioStore.getState()
 
       play('test-sound')
 
+      const { playingSounds: newPlayingSounds } = useAudioStore.getState()
       expect(isPlaying('test-sound')).toBe(true)
-      expect(playingSounds).toContain('test-sound')
+      expect(newPlayingSounds).toContain('test-sound')
     })
 
     it('should not play an unloaded sound', () => {
@@ -101,18 +106,20 @@ describe('AudioStore', () => {
 
   describe('stop', () => {
     beforeEach(() => {
+      useAudioStore.setState({ sounds: {}, playingSounds: [] })
       const { loadSound, play } = useAudioStore.getState()
       loadSound(mockSoundSource)
       play('test-sound')
     })
 
     it('should stop a playing sound', () => {
-      const { stop, isPlaying, playingSounds } = useAudioStore.getState()
+      const { stop, isPlaying } = useAudioStore.getState()
 
       stop('test-sound')
 
+      const { playingSounds: newPlayingSounds } = useAudioStore.getState()
       expect(isPlaying('test-sound')).toBe(false)
-      expect(playingSounds).not.toContain('test-sound')
+      expect(newPlayingSounds).not.toContain('test-sound')
     })
 
     it('should not affect non-playing sound', () => {
@@ -127,6 +134,7 @@ describe('AudioStore', () => {
 
   describe('stopAll', () => {
     beforeEach(() => {
+      useAudioStore.setState({ sounds: {}, playingSounds: [] })
       const { loadSound, play } = useAudioStore.getState()
 
       const source1 = { ...mockSoundSource, id: 'sound1' }
@@ -139,13 +147,14 @@ describe('AudioStore', () => {
     })
 
     it('should stop all playing sounds', () => {
-      const { stopAll, isPlaying, playingSounds } = useAudioStore.getState()
+      const { stopAll, isPlaying } = useAudioStore.getState()
 
       stopAll()
 
+      const { playingSounds: newPlayingSounds } = useAudioStore.getState()
       expect(isPlaying('sound1')).toBe(false)
       expect(isPlaying('sound2')).toBe(false)
-      expect(playingSounds).toEqual([])
+      expect(newPlayingSounds).toEqual([])
     })
   })
 
@@ -184,17 +193,19 @@ describe('AudioStore', () => {
 
   describe('fadeIn', () => {
     beforeEach(() => {
+      useAudioStore.setState({ sounds: {}, playingSounds: [] })
       const { loadSound } = useAudioStore.getState()
       loadSound(mockSoundSource)
     })
 
     it('should start playing and fade in', () => {
-      const { fadeIn, isPlaying, playingSounds } = useAudioStore.getState()
+      const { fadeIn, isPlaying } = useAudioStore.getState()
 
       fadeIn('test-sound', 100)
 
+      const { playingSounds: newPlayingSounds } = useAudioStore.getState()
       expect(isPlaying('test-sound')).toBe(true)
-      expect(playingSounds).toContain('test-sound')
+      expect(newPlayingSounds).toContain('test-sound')
     })
 
     it('should not fade in unloaded sound', () => {

@@ -91,8 +91,9 @@ describe('VolumeSlider', () => {
     )
 
     const slider = screen.getByTestId('volume-test-sound')
-    // isPlaying=falseの場合、styleのbackgroundは設定されない（undefinedになる）
-    expect(slider.style.background).toBe('')
+    // isPlaying=falseの場合、灰色のグラデーションが適用される
+    expect(slider.style.background).toContain('#6B7280')
+    expect(slider.style.background).not.toContain('#3B82F6')
   })
 
   it('should prevent click propagation on container', () => {
@@ -127,7 +128,9 @@ describe('VolumeSlider', () => {
       />
     )
 
-    expect(screen.getByText('0%')).toBeInTheDocument()
+    expect(screen.getByTestId('volume-display-test-sound')).toHaveTextContent(
+      '0%'
+    )
     expect(screen.getByTestId('volume-test-sound')).toHaveValue('0')
 
     rerender(
@@ -140,7 +143,9 @@ describe('VolumeSlider', () => {
       />
     )
 
-    expect(screen.getByText('100%')).toBeInTheDocument()
+    expect(screen.getByTestId('volume-display-test-sound')).toHaveTextContent(
+      '100%'
+    )
     expect(screen.getByTestId('volume-test-sound')).toHaveValue('100')
   })
 
