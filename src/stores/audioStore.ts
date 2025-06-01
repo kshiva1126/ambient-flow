@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import * as audioManager from '../services/AudioManager'
 import { presetStorage } from '../services/PresetStorage'
+import { backgroundSync } from '../services/BackgroundSync'
+import { trackFeatureUsage, trackPerformance } from '../utils/pwaMetrics'
 import type { AudioStoreState } from '../types/store'
 import type { SoundSource, Preset } from '../types/sound'
 
@@ -31,8 +33,13 @@ export const useAudioStore = create<AudioStoreState>()(
         }
 
         try {
+          const loadStartTime = performance.now()
+
           // AudioManagerで音源を読み込み
           await audioManager.load(source)
+
+          const loadTime = performance.now() - loadStartTime
+          trackPerformance('sound_load_time', loadTime, { soundId: source.id })
 
           // Zustandストアの状態を更新
           set(
@@ -85,6 +92,9 @@ export const useAudioStore = create<AudioStoreState>()(
         }
 
         audioManager.play(soundId)
+
+        // 機能使用を記録
+        trackFeatureUsage('sound_play', { soundId })
 
         set(
           (state) => {
@@ -344,6 +354,18 @@ export const useAudioStore = create<AudioStoreState>()(
         try {
           await presetStorage.savePreset(preset)
 
+          // オフライン時のためにBackground Syncに追加
+          if (!navigator.onLine) {
+            await backgroundSync.addSyncTask('save-preset', preset)
+          }
+
+          // 機能使用を記録
+          trackFeatureUsage('preset_save', {
+            presetId: preset.id,
+            soundCount: preset.sounds.length,
+            isOffline: !navigator.onLine,
+          })
+
           // ストア状態を更新
           set(
             (state) => ({
@@ -368,6 +390,8 @@ export const useAudioStore = create<AudioStoreState>()(
         }
 
         try {
+          const loadStartTime = performance.now()
+
           // すべての音源を停止
           audioManager.stopAll()
 
@@ -387,6 +411,15 @@ export const useAudioStore = create<AudioStoreState>()(
               audioManager.play(soundData.soundId)
             }
           }
+
+          const loadTime = performance.now() - loadStartTime
+
+          // 機能使用を記録
+          trackFeatureUsage('preset_load', {
+            presetId,
+            soundCount: preset.sounds.length,
+          })
+          trackPerformance('preset_load_time', loadTime, { presetId })
 
           // ストア状態を更新
           set(
@@ -438,6 +471,11 @@ export const useAudioStore = create<AudioStoreState>()(
         try {
           await presetStorage.deletePreset(presetId)
 
+          // オフライン時のためにBackground Syncに追加
+          if (!navigator.onLine) {
+            await backgroundSync.addSyncTask('delete-preset', presetId)
+          }
+
           set(
             (state) => ({
               presets: state.presets.filter((p) => p.id !== presetId),
@@ -476,6 +514,14 @@ export const useAudioStore = create<AudioStoreState>()(
 
         try {
           await presetStorage.savePreset(updatedPreset)
+
+          // オフライン時のためにBackground Syncに追加
+          if (!navigator.onLine) {
+            await backgroundSync.addSyncTask('update-preset', {
+              id: presetId,
+              preset: updatedPreset,
+            })
+          }
 
           set(
             (state) => ({
