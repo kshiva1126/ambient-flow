@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <g fill="black">
+    <!-- Yin-yang inspired design for Safari mask icon -->
+    <path d="M256 32C132.3 32 32 132.3 32 256s100.3 224 224 224 224-100.3 224-224S379.7 32 256 32zm0 64c88.4 0 160 71.6 160 160 0 44.2-17.9 84.2-46.9 113.1L256 256V96zm0 320c-88.4 0-160-71.6-160-160 0-44.2 17.9-84.2 46.9-113.1L256 256v160z"/>
+    <circle cx="256" cy="176" r="32"/>
+    <circle cx="256" cy="336" r="32"/>
+  </g>
+</svg>

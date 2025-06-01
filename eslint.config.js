@@ -11,7 +11,7 @@ export default tseslint.config(
   prettier,
   {
     files: ['**/*.{ts,tsx}'],
-    ignores: ['dist', 'src-tauri'],
+    ignores: ['dist'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,

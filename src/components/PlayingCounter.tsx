@@ -12,7 +12,7 @@ export const PlayingCounter = ({ count }: PlayingCounterProps) => {
           }`}
         />
         <span className="text-gray-300 font-medium" data-testid="playing-count">
-          {count > 0 ? `${count} 個の音源を再生中` : '音源を選択してください'}
+          {count !== 0 ? `${count} 個の音源を再生中` : '音源を選択してください'}
         </span>
       </div>
     </div>

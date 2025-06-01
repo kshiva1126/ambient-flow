@@ -38,7 +38,9 @@ describe('VolumeSlider', () => {
       />
     )
 
-    expect(screen.getByText('50%')).toBeInTheDocument()
+    expect(screen.getByTestId('volume-display-test-sound')).toHaveTextContent(
+      '50%'
+    )
     expect(screen.getByTestId('volume-display-test-sound')).toBeInTheDocument()
   })
 

@@ -97,7 +97,7 @@ describe('sounds data', () => {
     it('should return indoor sounds correctly', () => {
       const indoorSounds = getSoundsByCategory('indoor')
       expect(indoorSounds).toHaveLength(1)
-      expect(indoorSounds[0].id).toBe('fireplace')
+      expect(indoorSounds[0]?.id).toBe('fireplace')
     })
 
     it('should return urban sounds correctly', () => {

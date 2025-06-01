@@ -23,8 +23,6 @@ dist-ssr
 *.sln
 *.sw?
 
-# Tauri
-src-tauri/target/
 
 # Playwright
 /test-results/
