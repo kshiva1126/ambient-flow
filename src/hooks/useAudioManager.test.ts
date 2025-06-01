@@ -125,18 +125,23 @@ describe('useAudioManager', () => {
   })
 
   describe('stop', () => {
-    it('should call audioManager.stop and update playing sounds', () => {
-      vi.mocked(audioManager.getPlayingSounds)
-        .mockReturnValueOnce(['test-sound'])
-        .mockReturnValueOnce([])
+    it('should call audioManager.stop and update playing sounds', async () => {
+      // 初期状態は空
+      vi.mocked(audioManager.getPlayingSounds).mockReturnValue([])
 
       const { result } = renderHook(() => useAudioManager())
 
-      act(() => {
-        result.current.play('test-sound')
+      // play時に['test-sound']を返す
+      vi.mocked(audioManager.getPlayingSounds).mockReturnValue(['test-sound'])
+
+      await act(async () => {
+        await result.current.play('test-sound')
       })
 
       expect(result.current.playingSounds).toEqual(['test-sound'])
+
+      // stop時に[]を返す
+      vi.mocked(audioManager.getPlayingSounds).mockReturnValue([])
 
       act(() => {
         result.current.stop('test-sound')
@@ -161,8 +166,13 @@ describe('useAudioManager', () => {
 
   describe('fadeIn', () => {
     it('should call audioManager.fadeIn with default duration', () => {
-      vi.mocked(audioManager.getPlayingSounds).mockReturnValue(['test-sound'])
+      // 初期状態は空
+      vi.mocked(audioManager.getPlayingSounds).mockReturnValue([])
+
       const { result } = renderHook(() => useAudioManager())
+
+      // fadeIn後に['test-sound']を返す
+      vi.mocked(audioManager.getPlayingSounds).mockReturnValue(['test-sound'])
 
       act(() => {
         result.current.fadeIn('test-sound')
