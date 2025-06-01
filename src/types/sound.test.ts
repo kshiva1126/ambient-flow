@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import type { SoundSource, SoundCategory, IconName } from './sound'
+import type { SoundSource, SoundCategory } from './sound'
 
 describe('sound types', () => {
   describe('SoundCategory', () => {
@@ -17,9 +17,9 @@ describe('sound types', () => {
     })
   })
 
-  describe('IconName', () => {
-    it('should accept valid icon names', () => {
-      const validIcons: IconName[] = [
+  describe('Icon names', () => {
+    it('should accept valid icon names as strings', () => {
+      const validIcons = [
         'CloudRain',
         'Waves',
         'Bird',

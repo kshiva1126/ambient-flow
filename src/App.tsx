@@ -1,20 +1,20 @@
 import { useEffect } from 'react'
 import './App.css'
-import { useAudioManager } from './hooks/useAudioManager'
+import { useAudioStore } from './stores/audioStore'
 import { SOUND_SOURCES } from './data/sounds'
 import { SoundCard } from './components/SoundCard'
 import { PlayingCounter } from './components/PlayingCounter'
 
 function App() {
   const {
-    playingSounds,
     play,
     stop,
     setVolume,
     isPlaying,
     getVolume,
     loadSound,
-  } = useAudioManager()
+    getPlayingCount,
+  } = useAudioStore()
 
   // 音源を事前に読み込む
   useEffect(() => {
@@ -39,7 +39,7 @@ function App() {
     <div className="min-h-screen bg-gray-900 text-white p-8">
       <h1 className="text-4xl font-bold mb-8 text-center">AmbientFlow</h1>
 
-      <PlayingCounter count={playingSounds.length} />
+      <PlayingCounter count={getPlayingCount()} />
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
         {SOUND_SOURCES.map((source) => (
