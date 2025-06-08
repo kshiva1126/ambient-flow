@@ -23,6 +23,16 @@ dist-ssr
 *.sln
 *.sw?
 
+# TypeScript build info
+*.tsbuildinfo
+
+# Compiled files
+*.js.map
+*.d.ts.map
+
+# Vite generated files
+vite.config.js
+vite.config.d.ts
 
 # Playwright
 /test-results/
@@ -32,8 +42,17 @@ dist-ssr
 
 # Coverage reports
 /coverage/
+
 # UI improvement work files
 UI_IMPROVEMENT_*.md
 
 # Cloudflare Wrangler
 .wrangler/
+
+# Test screenshots (keep README)
+test-screenshots/*
+!test-screenshots/README.md
+
+# PWA generated service worker
+dist/sw.js
+dist/workbox-*.js
