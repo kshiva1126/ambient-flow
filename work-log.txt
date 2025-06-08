@@ -1,5 +1,65 @@
 # AmbientFlow 作業ログ
 
+## 2025/06/08 - Issue #52: コードベースクリーンアップ完了
+
+### 実施内容
+プロジェクトの不要ファイル削除によるコードベースの整理とメンテナンス性向上を行いました。
+
+### 削除したファイル
+1. **ビルドキャッシュファイル**
+   - `tsconfig.node.tsbuildinfo`
+   - `tsconfig.tsbuildinfo`
+   - `vite.config.js` (コンパイル済み、TSファイルがソース)
+   - `vite.config.d.ts` (生成された型定義ファイル)
+
+2. **不要ファイル**
+   - `public/icon.svg` (参照なし、削除可能と判断)
+   - `public/sw.js` (Vite PWAが自動生成するため重複)
+   - `src/styles/` (空ディレクトリ)
+
+3. **未使用依存関係**
+   - `motion` パッケージ (コード内で使用されていない)
+
+### .gitignore最適化
+以下の項目を追加してビルド成果物を適切に除外：
+- `*.tsbuildinfo`
+- `*.js.map`, `*.d.ts.map`
+- `vite.config.js`, `vite.config.d.ts`
+- `test-screenshots/*` (README除く)
+- PWA関連の生成ファイル
+
+### 検証結果
+- ビルド: 正常動作
+- テスト: 191 passed | 1 skipped
+- Lint: 1 warning (既存の警告、新たな問題なし)
+
+### 使用したコマンド
+```bash
+# 削除対象ファイルの調査
+npx depcheck
+grep -r "icon.svg" .
+grep -r "sw.js" .
+
+# ファイル削除
+rm -f tsconfig.node.tsbuildinfo tsconfig.tsbuildinfo vite.config.js vite.config.d.ts
+rm -f public/icon.svg public/sw.js
+rm -rf src/styles
+
+# 依存関係削除
+pnpm remove motion
+
+# 動作確認
+pnpm build
+pnpm test
+pnpm lint
+```
+
+### 成果
+- プロジェクト構造のシンプル化
+- 不要ファイル除去によるリポジトリサイズ軽量化
+- .gitignoreの最適化により今後のビルド成果物管理改善
+- 依存関係の整理によるパッケージサイズ削減
+
 ## 2025/05/31 - ステータス管理用ラベルの作成
 
 ### 実施内容
