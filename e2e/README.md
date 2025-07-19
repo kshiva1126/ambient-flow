@@ -1,11 +1,11 @@
 # E2Eテスト
 
-このディレクトリには、AmbientFlowアプリケーションのEnd-to-End (E2E) テストが含まれています。
+このディレクトリには、AmbientFlow PWAアプリケーションのEnd-to-End (E2E) テストが含まれています。
 
 ## 概要
 
-PlaywrightとViteを使用してWebアプリケーションとしてのE2Eテストを実装しています。
-実際のTauriアプリケーションのテストも可能ですが、開発中は軽量なWebテストで基本的な動作を確認します。
+PlaywrightとViteを使用してProgressive Web Application (PWA)としてのE2Eテストを実装しています。
+PWA機能（Service Worker、オフライン動作、インストール機能）を含む包括的なテストを実施します。
 
 ## テストファイル
 
@@ -18,14 +18,15 @@ PlaywrightとViteを使用してWebアプリケーションとしてのE2Eテス
 - 初期状態の確認
 - ボリュームコントロールの表示
 
-### audio-playbook.spec.ts
+### audio-playback.spec.ts
 
 音源再生機能のテスト
 
 - 音源のクリックによる再生/停止
-- 複数音源の同時再生
+- 複数音源の同時再生（15音源まで）
 - 再生状態の視覚的フィードバック
 - 再生カウントの更新
+- オフライン状態での音声再生
 
 ### volume-control.spec.ts
 
@@ -40,10 +41,12 @@ PlaywrightとViteを使用してWebアプリケーションとしてのE2Eテス
 
 パフォーマンステスト
 
+- Core Web Vitalsテスト（LCP, FID, CLS）
 - 複数音源の同時再生
 - 頻繁な操作への応答性
 - ストレステスト（全15音源の同時再生）
 - メモリリーク検出
+- Service Workerキャッシュパフォーマンス
 
 ## 実行方法
 
@@ -64,28 +67,41 @@ pnpm test:e2e e2e/app.spec.ts
 pnpm test:e2e --headed
 ```
 
+## PWA機能テスト
+
+### 追加テストファイル
+
+- **pwa-install.spec.ts**: PWAインストール機能のテスト
+- **offline-functionality.spec.ts**: オフライン動作のテスト
+- **service-worker.spec.ts**: Service Worker機能のテスト
+- **responsive-design.spec.ts**: レスポンシブデザインのテスト
+
 ## テスト用データ属性
 
 E2Eテストでは、要素の特定にdata-testid属性を使用しています：
 
-- `playing-count`: 再生中の音源数表示
+- `playing-counter`: 再生中の音源数表示
 - `sound-{soundId}`: 各音源のカード
-- `volume-{soundId}`: 各音源のボリュームスライダー
-- `volume-display-{soundId}`: 各音源のボリューム表示
+- `volume-slider`: 各音源のボリュームスライダー
+- `volume-display`: 各音源のボリューム表示
+- `install-prompt`: PWAインストールプロンプト
+- `offline-indicator`: オフライン状態表示
+- `preset-1`, `preset-2`, `preset-3`: プリセットボタン
 
 ## 制限事項
 
 ### 現在の実装
 
-- WebアプリケーションとしてのテストのみHy
-- 実際の音声再生はモック（AudioManagerでモック済み）
-- ブラウザ環境での動作確認
+- Progressive Web Application (PWA)としての包括的テスト
+- Service Worker、キャッシュ、オフライン機能のテスト
+- クロスブラウザテスト（Chrome, Firefox, Safari, Edge）
+- レスポンシブデザインテスト（モバイル・デスクトップ）
 
 ### 将来の拡張予定
 
-- Tauri WebDriver を使用した実際のデスクトップアプリテスト
-- 実際の音声再生テスト（オーディオデバイス必要）
-- クロスプラットフォームテスト（Windows/Mac/Linux）
+- 実際の音声再生テスト（Web Audio APIモニタリング）
+- モバイルデバイスでの実機テスト
+- パフォーマンスベンチマークの自動化
 - 長時間動作テスト（24時間連続再生）
 
 ## CI/CD統合
@@ -93,11 +109,15 @@ E2Eテストでは、要素の特定にdata-testid属性を使用しています
 GitHub Actionsでの実行例：
 
 ```yaml
-name: E2E Tests
+name: PWA E2E Tests
 on: [push, pull_request]
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        browser: [chromium, firefox, webkit]
     steps:
       - uses: actions/checkout@v3
       - uses: pnpm/action-setup@v2
@@ -106,8 +126,10 @@ jobs:
         run: pnpm install
       - name: Install Playwright
         run: pnpm playwright install --with-deps
+      - name: Build PWA
+        run: pnpm build
       - name: Run E2E tests
-        run: pnpm test:e2e
+        run: pnpm test:e2e --project=${{ matrix.browser }}
 ```
 
 ## トラブルシューティング
@@ -118,6 +140,7 @@ jobs:
 
    - `pnpm dev` でサーバーが正常に起動することを確認
    - ポート5173が他のプロセスで使用されていないか確認
+   - Service Workerの登録を待つための十分なタイムアウト設定
 
 2. **ブラウザインストールエラー**
 
