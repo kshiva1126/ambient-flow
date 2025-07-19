@@ -4,86 +4,158 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-AmbientFlow is a cross-platform desktop application for ambient sound mixing, built with Tauri v2.x (Rust + React). The app allows users to play multiple ambient sounds simultaneously with individual volume controls and preset management.
+AmbientFlow is a Progressive Web Application (PWA) for ambient sound mixing, deployed on Cloudflare Workers. The app allows users to play multiple ambient sounds simultaneously with individual volume controls and preset management. It features offline capabilities and can be installed as a PWA on desktop and mobile devices.
 
-**Current Status**: Specification phase - no implementation exists yet. Only `ambient_sound_app_spec.md` is present.
+**Current Status**: Fully implemented PWA with 15 ambient sound sources, complete with testing suite and deployment automation.
 
 ## Technology Stack
 
-- **Framework**: Tauri v2.x (Rust backend + Web frontend)
 - **Frontend**: React 19 + TypeScript 5.8 + Vite
 - **Styling**: TailwindCSS 4.x + Motion (animations)
 - **Audio**: Howler.js 2.x
 - **State Management**: Zustand 5.x
 - **Icons**: Lucide React
+- **PWA**: VitePWA plugin + Workbox
+- **Deployment**: Cloudflare Workers + KV storage
+- **Performance**: Core Web Vitals monitoring
 
 ## Development Commands
 
-Since the project hasn't been initialized yet, here are the commands to use once implementation begins:
-
 ```bash
-# Initial setup (after Tauri/React project creation)
-pnpm install            # Install dependencies
-pnpm dev                # Start development server
+# Development
+pnpm dev                # Start Vite development server
 pnpm build              # Build for production
+pnpm preview            # Preview production build
+
+# Code Quality
 pnpm lint               # Run ESLint
+pnpm lint:fix           # Auto-fix ESLint issues
+pnpm format             # Format code with Prettier
+pnpm format:check       # Check code formatting
 pnpm typecheck          # Run TypeScript type checking
-pnpm test               # Run tests
-pnpm tauri dev          # Run Tauri in development mode
-pnpm tauri build        # Build Tauri app for distribution
+
+# Testing
+pnpm test               # Run unit tests with Vitest
+pnpm test:ui            # Run tests with UI
+pnpm test:coverage      # Run tests with coverage report
+pnpm test:e2e           # Run E2E tests with Playwright
+pnpm test:e2e:ui        # Run E2E tests with UI
+pnpm test:e2e:debug     # Debug E2E tests
+
+# Cloudflare Workers
+pnpm cf:login           # Login to Cloudflare
+pnpm cf:dev             # Start local Workers development
+pnpm deploy             # Deploy to production
+pnpm deploy:preview     # Deploy to preview environment
+pnpm deploy:assets      # Upload assets to KV storage
+pnpm deploy:full        # Full deployment (build + assets + deploy)
 ```
 
 ## Architecture
 
-### Directory Structure (Planned)
+### Directory Structure
 
 ```
 src/
 ├── components/         # React components
-│   ├── AudioControl/   # Sound source controls
-│   ├── VolumeSlider/   # Volume sliders
-│   └── PresetManager/  # Preset management
-├── hooks/             # Custom React hooks
-├── stores/            # Zustand state stores
-├── utils/             # Utility functions
-├── types/             # TypeScript type definitions
-├── assets/            # Audio files & images
-└── styles/            # Style definitions
+│   ├── SoundCard.tsx          # Individual sound source controls
+│   ├── VolumeSlider.tsx       # Volume slider component
+│   ├── PlayingCounter.tsx     # Counter for active sounds
+│   ├── SoundIcon.tsx          # Sound type icons
+│   ├── InstallPrompt.tsx      # PWA install prompts
+│   ├── UpdateNotification.tsx # App update notifications
+│   ├── OfflineIndicator.tsx   # Offline status indicator
+│   └── LoadingStates.tsx      # Loading state components
+├── hooks/              # Custom React hooks
+│   ├── useAudioManager.ts     # Audio playback management
+│   └── useAppUpdate.ts        # PWA update handling
+├── stores/             # Zustand state stores
+│   └── audioStore.ts          # Audio state management
+├── services/           # Service layer
+│   ├── AudioManager.ts        # Core audio management
+│   ├── PresetStorage.ts       # Preset persistence
+│   ├── AudioCacheManager.ts   # Audio caching
+│   └── BackgroundSync.ts      # Background synchronization
+├── utils/              # Utility functions
+│   ├── performance.ts         # Performance optimization
+│   ├── pwaHelpers.ts          # PWA utilities
+│   ├── pwaMetrics.ts          # Performance metrics
+│   └── serviceWorker.ts       # Service Worker management
+├── types/              # TypeScript type definitions
+│   ├── sound.ts              # Sound-related types
+│   ├── store.ts              # Store types
+│   ├── index.ts              # Shared types
+│   └── global.d.ts           # Global type declarations
+└── data/               # Static data
+    └── sounds.ts              # Sound source definitions
 
-src-tauri/
-├── src/               # Rust source code
-└── icons/             # App icons
+worker/                 # Cloudflare Workers
+├── index.ts           # Main worker script
+└── assets-uploader.ts # Asset upload utility
+
+e2e/                   # E2E tests
+├── app.spec.ts        # Main application tests
+├── audio-playback.spec.ts  # Audio functionality tests
+├── performance.spec.ts     # Performance tests
+└── volume-control.spec.ts  # Volume control tests
 ```
 
 ### Core Features
 
-- 14 ambient sound sources (rain, waves, fireplace, etc.)
+- 15 ambient sound sources (rain, waves, fireplace, etc.)
 - Individual volume controls (0-100%)
-- Preset save/load functionality
-- Dark theme UI with blue glow effects for active sounds
-- 1200x800px fixed window size
+- Preset save/load functionality (3 preset slots)
+- Dark theme UI with animated glow effects for active sounds
+- PWA installation and offline capabilities
+- Automatic caching and background sync
+- Performance monitoring with Core Web Vitals
+
+### Audio Architecture
+
+- **AudioManager**: Centralized audio control using Howler.js
+- **AudioCacheManager**: Intelligent audio file caching for offline use
+- **BackgroundSync**: Background synchronization of audio assets
+- **State Management**: Zustand store for global audio state
+- **Error Handling**: Comprehensive error recovery for audio loading failures
 
 ### Performance Requirements
 
-- CPU usage: <5% during playback
-- Memory usage: <150MB
-- UI response time: <100ms
-- Support 24-hour continuous operation
-
-## Implementation Phases
-
-1. **Phase 1**: Basic audio playback functionality
-2. **Phase 2**: UI implementation and volume controls
-3. **Phase 3**: Preset functionality
-4. **Phase 4**: Optimization and stability improvements
+- **Core Web Vitals**:
+  - LCP (Largest Contentful Paint): < 2.5s
+  - FID (First Input Delay): < 100ms
+  - CLS (Cumulative Layout Shift): < 0.1
+- **Audio Performance**:
+  - Audio start delay: < 200ms
+  - Simultaneous playback: up to 15 sounds
+  - Memory usage: optimized with automatic cleanup
+- **PWA Performance**:
+  - Cache hit rate: > 95%
+  - Offline functionality: 100%
+  - Service worker update: automatic with user notification
 
 ## Key Considerations
 
-- All audio operations should use Howler.js for cross-platform compatibility
-- State management with Zustand should follow the AppState interface defined in the spec
-- UI must provide immediate visual feedback (100ms response time)
-- Error handling is critical for audio file loading failures
-- Memory management: unused audio sources should be automatically unloaded
+### Audio Implementation
+
+- **Howler.js Integration**: All audio operations use Howler.js for cross-browser compatibility
+- **State Synchronization**: Audio state must stay synchronized between AudioManager and Zustand store
+- **Error Handling**: Robust error recovery for audio loading failures with user feedback
+- **Memory Management**: Automatic cleanup of unused audio instances to prevent memory leaks
+- **Performance**: Audio preloading and caching for immediate playback response
+
+### PWA Requirements
+
+- **Service Worker**: Must handle offline scenarios and cache audio files efficiently
+- **Manifest**: PWA manifest configuration for proper installation experience
+- **Update Strategy**: Background updates with user notification for new versions
+- **Offline First**: Core functionality must work without internet connectivity
+
+### Testing Strategy
+
+- **Unit Tests**: All service classes, hooks, and utilities must have comprehensive tests
+- **E2E Tests**: Critical user flows including audio playback, volume control, and preset management
+- **Performance Tests**: Regular monitoring of Core Web Vitals and audio performance metrics
+- **Cross-browser Testing**: Ensure compatibility across modern browsers
 
 ## Development Guidelines
 
@@ -140,11 +212,6 @@ src-tauri/
 - **ESLint**: JavaScriptとTypeScriptのコード品質チェック
 - **Prettier**: コードフォーマットの統一
 
-**Rust (src-tauri)**
-
-- **rustfmt**: Rustコードの自動フォーマット
-- **clippy**: Rustコードの静的解析とLint
-
 **ツール管理**
 
 - **husky + lint-staged**: pre-commitフックの管理
@@ -158,15 +225,32 @@ pnpm format             # フォーマット実行
 pnpm lint               # Lintチェック
 pnpm lint:fix           # Lint自動修正
 pnpm typecheck          # 型チェック
-
-# Rust
-pnpm rust:fmt           # Rustフォーマット実行
-pnpm rust:fmt:check     # Rustフォーマットチェック
-pnpm rust:clippy        # Rustコード品質チェック
-pnpm rust:check         # Rustコンパイルチェック
 ```
 
 **重要**: コミット前にこれらのチェックが自動実行されるため、エラーがある場合はコミットできません。
+
+### Cloudflare Workers Development
+
+Cloudflare Workers関連の開発では以下のファイルが重要です：
+
+- `worker/index.ts`: メインWorkerスクリプト（アセット配信、キャッシング、PWA対応）
+- `worker/assets-uploader.ts`: 本番環境へのアセットアップロード
+- `wrangler.toml`: Workers設定（KVネームスペース、環境変数等）
+- `deployment-guide.md`: デプロイメント手順の詳細
+
+#### Workersローカル開発
+
+```bash
+pnpm cf:dev              # ローカルWorkers開発サーバー起動
+```
+
+#### デプロイメント
+
+```bash
+pnpm deploy:full         # フルデプロイ（推奨）
+pnpm deploy              # Workerのみデプロイ
+pnpm deploy:preview      # プレビュー環境デプロイ
+```
 
 ## Issue Management
 
@@ -244,7 +328,7 @@ gh issue list --assignee @me --label "status: in progress" --repo kshiva1126/amb
 ```bash
 # issue対応開始時：featureブランチを作成
 git checkout -b feature/issue-<issue番号>-<簡潔な説明>
-# 例: git checkout -b feature/issue-3-tauri-setup
+# 例: git checkout -b feature/issue-3-pwa-optimization
 
 # 作業完了後：プルリクエストを作成
 gh pr create --title "タイトル" --body "本文"
