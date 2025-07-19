@@ -63,13 +63,13 @@ describe('AudioCacheManager', () => {
     it('should cache audio file successfully', async () => {
       const result = await audioCacheManager.cacheAudioFile(
         'rain',
-        '/assets/sounds/rain.ogg'
+        '/assets/sounds/rain.mp3'
       )
 
       expect(result).toBe(true)
       expect(mockCaches.open).toHaveBeenCalledWith('ambient-flow-audio-cache')
-      expect(mockCache.match).toHaveBeenCalledWith('/assets/sounds/rain.ogg')
-      expect(mockFetch).toHaveBeenCalledWith('/assets/sounds/rain.ogg')
+      expect(mockCache.match).toHaveBeenCalledWith('/assets/sounds/rain.mp3')
+      expect(mockFetch).toHaveBeenCalledWith('/assets/sounds/rain.mp3')
       expect(mockCache.put).toHaveBeenCalled()
     })
 
@@ -78,7 +78,7 @@ describe('AudioCacheManager', () => {
 
       const result = await audioCacheManager.cacheAudioFile(
         'rain',
-        '/assets/sounds/rain.ogg'
+        '/assets/sounds/rain.mp3'
       )
 
       expect(result).toBe(true)
@@ -91,7 +91,7 @@ describe('AudioCacheManager', () => {
 
       const result = await audioCacheManager.cacheAudioFile(
         'rain',
-        '/assets/sounds/rain.ogg'
+        '/assets/sounds/rain.mp3'
       )
 
       expect(result).toBe(false)
@@ -100,7 +100,7 @@ describe('AudioCacheManager', () => {
     it('should not cache if strategy not found', async () => {
       const result = await audioCacheManager.cacheAudioFile(
         'unknown-sound',
-        '/assets/sounds/unknown.ogg'
+        '/assets/sounds/unknown.mp3'
       )
 
       expect(result).toBe(false)
@@ -115,11 +115,11 @@ describe('AudioCacheManager', () => {
 
       const result = await audioCacheManager.getCachedAudioFile(
         'rain',
-        '/assets/sounds/rain.ogg'
+        '/assets/sounds/rain.mp3'
       )
 
       expect(result).toBe(mockResponse)
-      expect(mockCache.match).toHaveBeenCalledWith('/assets/sounds/rain.ogg')
+      expect(mockCache.match).toHaveBeenCalledWith('/assets/sounds/rain.mp3')
     })
 
     it('should return null if not cached', async () => {
@@ -127,7 +127,7 @@ describe('AudioCacheManager', () => {
 
       const result = await audioCacheManager.getCachedAudioFile(
         'rain',
-        '/assets/sounds/rain.ogg'
+        '/assets/sounds/rain.mp3'
       )
 
       expect(result).toBe(null)
@@ -138,7 +138,7 @@ describe('AudioCacheManager', () => {
 
       const result = await audioCacheManager.getCachedAudioFile(
         'rain',
-        '/assets/sounds/rain.ogg'
+        '/assets/sounds/rain.mp3'
       )
 
       expect(result).toBe(null)
@@ -151,10 +151,10 @@ describe('AudioCacheManager', () => {
 
       // 高優先度の音源（rain, waves, white-noise, fireplace）がキャッシュされることを確認
       expect(mockFetch).toHaveBeenCalledTimes(4)
-      expect(mockFetch).toHaveBeenCalledWith('/assets/sounds/rain.ogg')
-      expect(mockFetch).toHaveBeenCalledWith('/assets/sounds/waves.ogg')
-      expect(mockFetch).toHaveBeenCalledWith('/assets/sounds/white-noise.ogg')
-      expect(mockFetch).toHaveBeenCalledWith('/assets/sounds/fireplace.ogg')
+      expect(mockFetch).toHaveBeenCalledWith('/assets/sounds/rain.mp3')
+      expect(mockFetch).toHaveBeenCalledWith('/assets/sounds/waves.mp3')
+      expect(mockFetch).toHaveBeenCalledWith('/assets/sounds/white-noise.mp3')
+      expect(mockFetch).toHaveBeenCalledWith('/assets/sounds/fireplace.mp3')
     })
 
     it('should handle preload failures gracefully', async () => {
@@ -229,16 +229,16 @@ describe('AudioCacheManager', () => {
   describe('getCachedFilesList', () => {
     it('should return list of cached files', async () => {
       const mockKeys = [
-        { url: '/assets/sounds/rain.ogg' },
-        { url: '/assets/sounds/waves.ogg' },
+        { url: '/assets/sounds/rain.mp3' },
+        { url: '/assets/sounds/waves.mp3' },
       ]
       mockCache.keys.mockResolvedValueOnce(mockKeys)
 
       const result = await audioCacheManager.getCachedFilesList()
 
       expect(result).toEqual([
-        '/assets/sounds/rain.ogg',
-        '/assets/sounds/waves.ogg',
+        '/assets/sounds/rain.mp3',
+        '/assets/sounds/waves.mp3',
       ])
     })
 
