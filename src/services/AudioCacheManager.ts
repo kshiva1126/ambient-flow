@@ -172,7 +172,7 @@ class AudioCacheManager {
     const preloadPromises = highPriorityFiles.map(async (soundId) => {
       const source = SOUND_SOURCES.find((s) => s.id === soundId)
       if (source) {
-        const audioUrl = `/src/assets/sounds/${source.fileName}`
+        const audioUrl = `/assets/sounds/${source.fileName}`
         await this.cacheAudioFile(soundId, audioUrl)
       }
     })
@@ -198,7 +198,7 @@ class AudioCacheManager {
     for (const soundId of filesToRemove) {
       const source = SOUND_SOURCES.find((s) => s.id === soundId)
       if (source) {
-        const audioUrl = `/src/assets/sounds/${source.fileName}`
+        const audioUrl = `/assets/sounds/${source.fileName}`
         await cache.delete(audioUrl)
 
         const strategy = this.cacheStrategies.get(soundId)
