@@ -10,7 +10,7 @@ AmbientFlow is a Progressive Web Application (PWA) for ambient sound mixing, dep
 
 ## Technology Stack
 
-- **Frontend**: React 19.1 + TypeScript 5.8 + Vite 7.0
+- **Frontend**: React 19.1 + TypeScript 5.8 + Vite 7.0 + tsgo (型チェック高速化)
 - **Styling**: TailwindCSS 4.1 + Motion (animations)
 - **Audio**: Howler.js 2.x
 - **State Management**: Zustand 5.0
