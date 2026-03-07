@@ -14,6 +14,24 @@ interface AudioInstance {
 const MAX_RETRY_COUNT = 3
 const RETRY_DELAY_MS = 1000
 
+// 状態変更リスナー
+type StateChangeListener = (soundId: string, isPlaying: boolean) => void
+const stateChangeListeners = new Set<StateChangeListener>()
+
+const notifyStateChange = (soundId: string, isPlaying: boolean): void => {
+  stateChangeListeners.forEach((listener) => listener(soundId, isPlaying))
+}
+
+/**
+ * 再生状態変更リスナーを登録する
+ */
+export const onStateChange = (listener: StateChangeListener): (() => void) => {
+  stateChangeListeners.add(listener)
+  return () => {
+    stateChangeListeners.delete(listener)
+  }
+}
+
 // モジュールスコープでの状態管理
 const audioInstances = new Map<string, AudioInstance>()
 const basePath = '/assets/sounds/'
@@ -99,6 +117,27 @@ export const load = async (source: SoundSource): Promise<void> => {
         instance.retryCount = 0
       }
     },
+    onend: () => {
+      // loop: trueの場合は通常呼ばれないが、
+      // ブラウザやOSがループを中断した場合のフォールバック
+      const instance = audioInstances.get(source.id)
+      if (instance && instance.isPlaying) {
+        console.warn(
+          `Unexpected end event for ${source.id} (loop should prevent this), restarting`
+        )
+        instance.howl.play()
+      }
+    },
+    onstop: () => {
+      // 外部要因（ブラウザ等）で停止された場合に状態を同期
+      const instance = audioInstances.get(source.id)
+      if (instance && instance.isPlaying) {
+        console.warn(`Sound ${source.id} was stopped externally`)
+        instance.isPlaying = false
+        instance.retryCount = 0
+        notifyStateChange(source.id, false)
+      }
+    },
     onload: () => {
       console.log(`Successfully loaded ${source.fileName}`)
     },
@@ -127,6 +166,7 @@ export const play = (soundId: string): void => {
     instance.howl.play()
     instance.isPlaying = true
     instance.retryCount = 0
+    notifyStateChange(soundId, true)
   }
 }
 
@@ -142,6 +182,7 @@ export const stop = (soundId: string): void => {
   if (instance.isPlaying) {
     instance.howl.stop()
     instance.isPlaying = false
+    notifyStateChange(soundId, false)
   }
 }
 
@@ -199,10 +240,11 @@ export const fadeOut = (soundId: string, duration: number = 1000): void => {
  * すべての音源を停止する
  */
 export const stopAll = (): void => {
-  audioInstances.forEach((instance) => {
+  audioInstances.forEach((instance, id) => {
     if (instance.isPlaying) {
       instance.howl.stop()
       instance.isPlaying = false
+      notifyStateChange(id, false)
     }
   })
 }
@@ -355,4 +397,5 @@ export const clearAll = (): void => {
     instance.howl.unload()
   })
   audioInstances.clear()
+  stateChangeListeners.clear()
 }

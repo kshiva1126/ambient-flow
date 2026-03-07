@@ -2,6 +2,14 @@ import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { useAudioStore } from './audioStore'
 import type { SoundSource } from '../types/sound'
 
+// onStateChangeに渡されたリスナーをキャプチャ（vi.hoistedでvi.mockより先に初期化）
+const { capturedRef } = vi.hoisted(() => {
+  const capturedRef: {
+    listener?: (soundId: string, isPlaying: boolean) => void
+  } = {}
+  return { capturedRef }
+})
+
 // Mock AudioManager
 vi.mock('../services/AudioManager', () => ({
   load: vi.fn(),
@@ -12,6 +20,10 @@ vi.mock('../services/AudioManager', () => ({
   setVolume: vi.fn(),
   fadeIn: vi.fn(),
   fadeOut: vi.fn(),
+  onStateChange: vi.fn().mockImplementation((listener) => {
+    capturedRef.listener = listener
+    return () => {}
+  }),
 }))
 
 const mockSoundSource: SoundSource = {
@@ -319,6 +331,64 @@ describe('AudioStore', () => {
       expect(soundState?.id).toBe('test-sound')
 
       expect(getSoundState('non-existent')).toBeUndefined()
+    })
+  })
+
+  describe('state sync with AudioManager', () => {
+    it('should register onStateChange listener on module load', () => {
+      expect(capturedRef.listener).toBeDefined()
+    })
+
+    it('should sync state when AudioManager reports sound stopped', () => {
+      // 音源を手動でセットアップ（再生中）
+      useAudioStore.setState({
+        sounds: {
+          'test-sound': {
+            id: 'test-sound',
+            source: mockSoundSource,
+            isPlaying: true,
+            volume: 50,
+            isLoaded: true,
+          },
+        },
+        playingSounds: ['test-sound'],
+      })
+
+      // AudioManagerから停止通知をシミュレート
+      capturedRef.listener!('test-sound', false)
+
+      expect(useAudioStore.getState().sounds['test-sound']?.isPlaying).toBe(
+        false
+      )
+      expect(useAudioStore.getState().playingSounds).not.toContain('test-sound')
+    })
+
+    it('should not update state when already in sync', () => {
+      useAudioStore.setState({
+        sounds: {
+          'test-sound': {
+            id: 'test-sound',
+            source: mockSoundSource,
+            isPlaying: false,
+            volume: 50,
+            isLoaded: true,
+          },
+        },
+        playingSounds: [],
+      })
+
+      // 既にfalseなのにfalseを通知しても状態は変わらない
+      capturedRef.listener!('test-sound', false)
+
+      expect(useAudioStore.getState().sounds['test-sound']?.isPlaying).toBe(
+        false
+      )
+    })
+
+    it('should ignore state change for unknown sound', () => {
+      const stateBefore = useAudioStore.getState()
+      capturedRef.listener!('unknown-sound', false)
+      expect(useAudioStore.getState().sounds).toEqual(stateBefore.sounds)
     })
   })
 })
