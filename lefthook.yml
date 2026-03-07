@@ -1,0 +1,16 @@
+pre-commit:
+  commands:
+    lint-staged:
+      glob: '*.{js,jsx,ts,tsx,json,md,css,html}'
+      run: pnpm lint-staged
+
+pre-push:
+  commands:
+    lint:
+      run: pnpm lint
+    typecheck:
+      run: pnpm typecheck
+    test:
+      run: pnpm test --run
+    build:
+      run: pnpm build

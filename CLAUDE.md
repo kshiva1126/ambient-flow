@@ -214,7 +214,10 @@ e2e/                   # E2E tests
 
 **ツール管理**
 
-- **husky + lint-staged**: pre-commitフックの管理
+- **lefthook + lint-staged**: Gitフックの管理（`lefthook.yml`で設定）
+
+**pre-commit**: lint-stagedによるステージ済みファイルのlint/format
+**pre-push**: CI相当のチェック（lint → typecheck → test → build）
 
 設定済みのコマンド：
 
@@ -227,7 +230,7 @@ pnpm lint:fix           # Lint自動修正
 pnpm typecheck          # 型チェック
 ```
 
-**重要**: コミット前にこれらのチェックが自動実行されるため、エラーがある場合はコミットできません。
+**重要**: コミット前にlint/formatが、プッシュ前にCI相当のチェックが自動実行されるため、エラーがある場合はコミット/プッシュできません。
 
 ### Cloudflare Workers Development
 
