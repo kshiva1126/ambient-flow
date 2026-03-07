@@ -582,7 +582,6 @@ audioManager.onStateChange((soundId, isPlaying) => {
         }
       },
       false,
-      // @ts-expect-error devtools action name
       'audioManager-stateSync'
     )
   }

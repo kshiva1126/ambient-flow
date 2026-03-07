@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+import type { HowlOptions } from 'howler'
 import * as audioManager from './AudioManager'
 import type { SoundSource } from '../types/sound'
 
@@ -414,7 +415,7 @@ describe('AudioManager', () => {
         | ((id: number, error: unknown) => void)
         | undefined
 
-      MockHowl.mockImplementation((options: Record<string, unknown>) => {
+      MockHowl.mockImplementation((options: HowlOptions) => {
         capturedOnPlayError = options.onplayerror as typeof capturedOnPlayError
         return mockHowlInstance as unknown as InstanceType<typeof Howl>
       })
@@ -443,7 +444,7 @@ describe('AudioManager', () => {
         | ((id: number, error: unknown) => void)
         | undefined
 
-      MockHowl.mockImplementation((options: Record<string, unknown>) => {
+      MockHowl.mockImplementation((options: HowlOptions) => {
         capturedOnPlayError = options.onplayerror as typeof capturedOnPlayError
         return mockHowlInstance as unknown as InstanceType<typeof Howl>
       })
