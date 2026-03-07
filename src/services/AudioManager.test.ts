@@ -46,7 +46,6 @@ vi.mock('howler', () => ({
   Howl: vi.fn().mockImplementation(() => mockHowlInstance),
   Howler: {
     autoUnlock: true,
-    html5PoolSize: 10,
   },
 }))
 

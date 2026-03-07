@@ -38,7 +38,6 @@ const basePath = '/assets/sounds/'
 
 // 初期化
 Howler.autoUnlock = true
-Howler.html5PoolSize = 10
 
 /**
  * 音源を読み込む（キャッシュ対応）
@@ -71,7 +70,7 @@ export const load = async (source: SoundSource): Promise<void> => {
 
   const howl = new Howl({
     src: [audioSrc],
-    html5: true,
+    html5: false,
     loop: true,
     volume: source.defaultVolume / 100,
     preload: true,
@@ -82,7 +81,7 @@ export const load = async (source: SoundSource): Promise<void> => {
         console.log(`Retrying with original URL for ${source.id}`)
         const retryHowl = new Howl({
           src: [audioUrl],
-          html5: true,
+          html5: false,
           loop: true,
           volume: source.defaultVolume / 100,
           preload: true,
