@@ -404,6 +404,73 @@ describe('AudioManager', () => {
     })
   })
 
+  describe('playback retry on error', () => {
+    it('should retry playback on play error when sound is playing', async () => {
+      // Howlコンストラクタからonplayerrorコールバックを取得するためにモックを拡張
+      const { Howl } = await import('howler')
+      const MockHowl = vi.mocked(Howl)
+
+      let capturedOnPlayError:
+        | ((id: number, error: unknown) => void)
+        | undefined
+
+      MockHowl.mockImplementation((options: Record<string, unknown>) => {
+        capturedOnPlayError = options.onplayerror as typeof capturedOnPlayError
+        return mockHowlInstance as unknown as InstanceType<typeof Howl>
+      })
+
+      // 新しい音源をロード（キャプチャされたコールバックを取得するため）
+      const newSource = { ...mockSoundSource, id: 'retry-test' }
+      await audioManager.load(newSource)
+      audioManager.play('retry-test')
+
+      // onplayerrorをトリガー
+      expect(capturedOnPlayError).toBeDefined()
+      mockHowlInstance.play.mockClear()
+      capturedOnPlayError!(0, 'test error')
+
+      // リトライのsetTimeoutが発火するのを待つ
+      await new Promise((resolve) => setTimeout(resolve, 1100))
+
+      expect(mockHowlInstance.play).toHaveBeenCalled()
+    })
+
+    it('should not retry when max retries reached', async () => {
+      const { Howl } = await import('howler')
+      const MockHowl = vi.mocked(Howl)
+
+      let capturedOnPlayError:
+        | ((id: number, error: unknown) => void)
+        | undefined
+
+      MockHowl.mockImplementation((options: Record<string, unknown>) => {
+        capturedOnPlayError = options.onplayerror as typeof capturedOnPlayError
+        return mockHowlInstance as unknown as InstanceType<typeof Howl>
+      })
+
+      const newSource = { ...mockSoundSource, id: 'retry-max-test' }
+      await audioManager.load(newSource)
+      audioManager.play('retry-max-test')
+
+      expect(capturedOnPlayError).toBeDefined()
+
+      // MAX_RETRY_COUNT (3) 回エラーを発生させる
+      for (let i = 0; i < 3; i++) {
+        capturedOnPlayError!(0, 'test error')
+        await new Promise((resolve) => setTimeout(resolve, 1100))
+      }
+
+      mockHowlInstance.play.mockClear()
+
+      // 4回目のエラーではリトライしない
+      capturedOnPlayError!(0, 'test error')
+      await new Promise((resolve) => setTimeout(resolve, 1100))
+
+      expect(mockHowlInstance.play).not.toHaveBeenCalled()
+      expect(audioManager.isPlaying('retry-max-test')).toBe(false)
+    })
+  })
+
   describe('edge cases', () => {
     it('should handle fadeOut timeout conditions', async () => {
       audioManager.load(mockSoundSource)

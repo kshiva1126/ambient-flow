@@ -8,7 +8,11 @@ interface AudioInstance {
   source: SoundSource
   volume: number
   isPlaying: boolean
+  retryCount: number
 }
+
+const MAX_RETRY_COUNT = 3
+const RETRY_DELAY_MS = 1000
 
 // モジュールスコープでの状態管理
 const audioInstances = new Map<string, AudioInstance>()
@@ -70,11 +74,30 @@ export const load = async (source: SoundSource): Promise<void> => {
           source,
           volume: source.defaultVolume,
           isPlaying: false,
+          retryCount: 0,
         })
       }
     },
     onplayerror: (_id, error) => {
       console.error(`Failed to play ${source.fileName}:`, error)
+      const instance = audioInstances.get(source.id)
+      if (
+        instance &&
+        instance.isPlaying &&
+        instance.retryCount < MAX_RETRY_COUNT
+      ) {
+        instance.retryCount++
+        console.log(
+          `Retrying playback for ${source.id} (attempt ${instance.retryCount}/${MAX_RETRY_COUNT})`
+        )
+        setTimeout(() => {
+          instance.howl.play()
+        }, RETRY_DELAY_MS)
+      } else if (instance) {
+        console.error(`Max retries reached for ${source.id}, giving up`)
+        instance.isPlaying = false
+        instance.retryCount = 0
+      }
     },
     onload: () => {
       console.log(`Successfully loaded ${source.fileName}`)
@@ -86,6 +109,7 @@ export const load = async (source: SoundSource): Promise<void> => {
     source,
     volume: source.defaultVolume,
     isPlaying: false,
+    retryCount: 0,
   })
 }
 
@@ -102,6 +126,7 @@ export const play = (soundId: string): void => {
   if (!instance.isPlaying) {
     instance.howl.play()
     instance.isPlaying = true
+    instance.retryCount = 0
   }
 }
 
