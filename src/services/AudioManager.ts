@@ -49,51 +49,20 @@ export const load = async (source: SoundSource): Promise<void> => {
 
   const audioUrl = `${basePath}${source.fileName}`
 
-  // キャッシュからの読み込みを試行
-  const cachedResponse = await audioCacheManager.getCachedAudioFile(
-    source.id,
-    audioUrl
-  )
-  let audioSrc = audioUrl
-
-  if (cachedResponse) {
-    // キャッシュされたファイルをBlob URLとして使用
-    const blob = await cachedResponse.blob()
-    audioSrc = URL.createObjectURL(blob)
-    console.log(`Using cached audio for ${source.id}`)
-  } else {
-    // キャッシュにない場合は通常のURLを使用し、バックグラウンドでキャッシュ
-    audioCacheManager.cacheAudioFile(source.id, audioUrl).catch((error) => {
-      console.warn(`Failed to cache audio file ${source.id}:`, error)
-    })
-  }
+  // 常に通常URLを使用し、キャッシュはService Workerに委任する
+  // Blob URLはGCで回収される可能性があり、長時間再生時にループが失敗する原因となる
+  audioCacheManager.cacheAudioFile(source.id, audioUrl).catch((error) => {
+    console.warn(`Failed to cache audio file ${source.id}:`, error)
+  })
 
   const howl = new Howl({
-    src: [audioSrc],
+    src: [audioUrl],
     html5: false,
     loop: true,
     volume: source.defaultVolume / 100,
     preload: true,
     onloaderror: (_id, error) => {
       console.error(`Failed to load ${source.fileName}:`, error)
-      // キャッシュされたBlob URLの場合、元のURLで再試行
-      if (audioSrc !== audioUrl) {
-        console.log(`Retrying with original URL for ${source.id}`)
-        const retryHowl = new Howl({
-          src: [audioUrl],
-          html5: false,
-          loop: true,
-          volume: source.defaultVolume / 100,
-          preload: true,
-        })
-        audioInstances.set(source.id, {
-          howl: retryHowl,
-          source,
-          volume: source.defaultVolume,
-          isPlaying: false,
-          retryCount: 0,
-        })
-      }
     },
     onplayerror: (_id, error) => {
       console.error(`Failed to play ${source.fileName}:`, error)
