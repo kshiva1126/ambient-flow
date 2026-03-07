@@ -550,3 +550,39 @@ export const useAudioStore = create<AudioStoreState>()(
     }
   )
 )
+
+// AudioManagerの状態変更を監視してストアと同期
+audioManager.onStateChange((soundId, isPlaying) => {
+  const state = useAudioStore.getState()
+  const currentSound = state.sounds[soundId]
+
+  if (!currentSound) return
+
+  // AudioManagerからの状態変更がストアと異なる場合のみ更新
+  if (currentSound.isPlaying !== isPlaying) {
+    useAudioStore.setState(
+      (prev) => {
+        const sound = prev.sounds[soundId]
+        if (!sound) return prev
+
+        return {
+          ...prev,
+          sounds: {
+            ...prev.sounds,
+            [soundId]: {
+              ...sound,
+              isPlaying,
+            },
+          },
+          playingSounds: isPlaying
+            ? prev.playingSounds.includes(soundId)
+              ? prev.playingSounds
+              : [...prev.playingSounds, soundId]
+            : prev.playingSounds.filter((id) => id !== soundId),
+        }
+      },
+      false,
+      'audioManager-stateSync'
+    )
+  }
+})

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
+import type { HowlOptions } from 'howler'
 import * as audioManager from './AudioManager'
 import type { SoundSource } from '../types/sound'
 
@@ -40,13 +41,13 @@ const mockHowlInstance = {
   volume: vi.fn().mockReturnValue(0.5),
   fade: vi.fn(),
   unload: vi.fn(),
+  playing: vi.fn().mockReturnValue(true),
 }
 
 vi.mock('howler', () => ({
   Howl: vi.fn().mockImplementation(() => mockHowlInstance),
   Howler: {
     autoUnlock: true,
-    html5PoolSize: 10,
   },
 }))
 
@@ -401,6 +402,113 @@ describe('AudioManager', () => {
       // getVolume will return default values from getSoundById mock
       // For 'sound1' and 'sound2', the mock returns undefined, so getVolume returns 0
       expect(audioManager.getVolume('unknown-sound')).toBe(0)
+    })
+  })
+
+  describe('playback retry on error', () => {
+    it('should retry playback on play error when sound is playing', async () => {
+      // Howlコンストラクタからonplayerrorコールバックを取得するためにモックを拡張
+      const { Howl } = await import('howler')
+      const MockHowl = vi.mocked(Howl)
+
+      let capturedOnPlayError:
+        | ((id: number, error: unknown) => void)
+        | undefined
+
+      MockHowl.mockImplementation((options: HowlOptions) => {
+        capturedOnPlayError = options.onplayerror as typeof capturedOnPlayError
+        return mockHowlInstance as unknown as InstanceType<typeof Howl>
+      })
+
+      // 新しい音源をロード（キャプチャされたコールバックを取得するため）
+      const newSource = { ...mockSoundSource, id: 'retry-test' }
+      await audioManager.load(newSource)
+      audioManager.play('retry-test')
+
+      // onplayerrorをトリガー
+      expect(capturedOnPlayError).toBeDefined()
+      mockHowlInstance.play.mockClear()
+      capturedOnPlayError!(0, 'test error')
+
+      // リトライのsetTimeoutが発火するのを待つ
+      await new Promise((resolve) => setTimeout(resolve, 1100))
+
+      expect(mockHowlInstance.play).toHaveBeenCalled()
+    })
+
+    it('should not retry when max retries reached', async () => {
+      const { Howl } = await import('howler')
+      const MockHowl = vi.mocked(Howl)
+
+      let capturedOnPlayError:
+        | ((id: number, error: unknown) => void)
+        | undefined
+
+      MockHowl.mockImplementation((options: HowlOptions) => {
+        capturedOnPlayError = options.onplayerror as typeof capturedOnPlayError
+        return mockHowlInstance as unknown as InstanceType<typeof Howl>
+      })
+
+      const newSource = { ...mockSoundSource, id: 'retry-max-test' }
+      await audioManager.load(newSource)
+      audioManager.play('retry-max-test')
+
+      expect(capturedOnPlayError).toBeDefined()
+
+      // MAX_RETRY_COUNT (3) 回エラーを発生させる
+      for (let i = 0; i < 3; i++) {
+        capturedOnPlayError!(0, 'test error')
+        await new Promise((resolve) => setTimeout(resolve, 1100))
+      }
+
+      mockHowlInstance.play.mockClear()
+
+      // 4回目のエラーではリトライしない
+      capturedOnPlayError!(0, 'test error')
+      await new Promise((resolve) => setTimeout(resolve, 1100))
+
+      expect(mockHowlInstance.play).not.toHaveBeenCalled()
+      expect(audioManager.isPlaying('retry-max-test')).toBe(false)
+    })
+  })
+
+  describe('resumeAllPlaying', () => {
+    it('should resume sounds that are marked as playing but actually stopped', async () => {
+      await audioManager.load(mockSoundSource)
+      audioManager.play(mockSoundSource.id)
+
+      // Howl.playing()がfalseを返す（実際は停止している）
+      mockHowlInstance.playing = vi.fn().mockReturnValue(false)
+      mockHowlInstance.play.mockClear()
+
+      audioManager.resumeAllPlaying()
+
+      expect(mockHowlInstance.play).toHaveBeenCalled()
+    })
+
+    it('should not restart sounds that are actually playing', async () => {
+      await audioManager.load(mockSoundSource)
+      audioManager.play(mockSoundSource.id)
+
+      // Howl.playing()がtrueを返す（実際に再生中）
+      mockHowlInstance.playing = vi.fn().mockReturnValue(true)
+      mockHowlInstance.play.mockClear()
+
+      audioManager.resumeAllPlaying()
+
+      expect(mockHowlInstance.play).not.toHaveBeenCalled()
+    })
+
+    it('should not resume sounds that are not marked as playing', async () => {
+      await audioManager.load(mockSoundSource)
+      // play()を呼ばない
+
+      mockHowlInstance.playing = vi.fn().mockReturnValue(false)
+      mockHowlInstance.play.mockClear()
+
+      audioManager.resumeAllPlaying()
+
+      expect(mockHowlInstance.play).not.toHaveBeenCalled()
     })
   })
 

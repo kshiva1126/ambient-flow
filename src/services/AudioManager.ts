@@ -8,6 +8,28 @@ interface AudioInstance {
   source: SoundSource
   volume: number
   isPlaying: boolean
+  retryCount: number
+}
+
+const MAX_RETRY_COUNT = 3
+const RETRY_DELAY_MS = 1000
+
+// 状態変更リスナー
+type StateChangeListener = (soundId: string, isPlaying: boolean) => void
+const stateChangeListeners = new Set<StateChangeListener>()
+
+const notifyStateChange = (soundId: string, isPlaying: boolean): void => {
+  stateChangeListeners.forEach((listener) => listener(soundId, isPlaying))
+}
+
+/**
+ * 再生状態変更リスナーを登録する
+ */
+export const onStateChange = (listener: StateChangeListener): (() => void) => {
+  stateChangeListeners.add(listener)
+  return () => {
+    stateChangeListeners.delete(listener)
+  }
 }
 
 // モジュールスコープでの状態管理
@@ -16,7 +38,6 @@ const basePath = '/assets/sounds/'
 
 // 初期化
 Howler.autoUnlock = true
-Howler.html5PoolSize = 10
 
 /**
  * 音源を読み込む（キャッシュ対応）
@@ -28,53 +49,62 @@ export const load = async (source: SoundSource): Promise<void> => {
 
   const audioUrl = `${basePath}${source.fileName}`
 
-  // キャッシュからの読み込みを試行
-  const cachedResponse = await audioCacheManager.getCachedAudioFile(
-    source.id,
-    audioUrl
-  )
-  let audioSrc = audioUrl
-
-  if (cachedResponse) {
-    // キャッシュされたファイルをBlob URLとして使用
-    const blob = await cachedResponse.blob()
-    audioSrc = URL.createObjectURL(blob)
-    console.log(`Using cached audio for ${source.id}`)
-  } else {
-    // キャッシュにない場合は通常のURLを使用し、バックグラウンドでキャッシュ
-    audioCacheManager.cacheAudioFile(source.id, audioUrl).catch((error) => {
-      console.warn(`Failed to cache audio file ${source.id}:`, error)
-    })
-  }
+  // 常に通常URLを使用し、キャッシュはService Workerに委任する
+  // Blob URLはGCで回収される可能性があり、長時間再生時にループが失敗する原因となる
+  audioCacheManager.cacheAudioFile(source.id, audioUrl).catch((error) => {
+    console.warn(`Failed to cache audio file ${source.id}:`, error)
+  })
 
   const howl = new Howl({
-    src: [audioSrc],
-    html5: true,
+    src: [audioUrl],
+    html5: false,
     loop: true,
     volume: source.defaultVolume / 100,
     preload: true,
     onloaderror: (_id, error) => {
       console.error(`Failed to load ${source.fileName}:`, error)
-      // キャッシュされたBlob URLの場合、元のURLで再試行
-      if (audioSrc !== audioUrl) {
-        console.log(`Retrying with original URL for ${source.id}`)
-        const retryHowl = new Howl({
-          src: [audioUrl],
-          html5: true,
-          loop: true,
-          volume: source.defaultVolume / 100,
-          preload: true,
-        })
-        audioInstances.set(source.id, {
-          howl: retryHowl,
-          source,
-          volume: source.defaultVolume,
-          isPlaying: false,
-        })
-      }
     },
     onplayerror: (_id, error) => {
       console.error(`Failed to play ${source.fileName}:`, error)
+      const instance = audioInstances.get(source.id)
+      if (
+        instance &&
+        instance.isPlaying &&
+        instance.retryCount < MAX_RETRY_COUNT
+      ) {
+        instance.retryCount++
+        console.log(
+          `Retrying playback for ${source.id} (attempt ${instance.retryCount}/${MAX_RETRY_COUNT})`
+        )
+        setTimeout(() => {
+          instance.howl.play()
+        }, RETRY_DELAY_MS)
+      } else if (instance) {
+        console.error(`Max retries reached for ${source.id}, giving up`)
+        instance.isPlaying = false
+        instance.retryCount = 0
+      }
+    },
+    onend: () => {
+      // loop: trueの場合は通常呼ばれないが、
+      // ブラウザやOSがループを中断した場合のフォールバック
+      const instance = audioInstances.get(source.id)
+      if (instance && instance.isPlaying) {
+        console.warn(
+          `Unexpected end event for ${source.id} (loop should prevent this), restarting`
+        )
+        instance.howl.play()
+      }
+    },
+    onstop: () => {
+      // 外部要因（ブラウザ等）で停止された場合に状態を同期
+      const instance = audioInstances.get(source.id)
+      if (instance && instance.isPlaying) {
+        console.warn(`Sound ${source.id} was stopped externally`)
+        instance.isPlaying = false
+        instance.retryCount = 0
+        notifyStateChange(source.id, false)
+      }
     },
     onload: () => {
       console.log(`Successfully loaded ${source.fileName}`)
@@ -86,6 +116,7 @@ export const load = async (source: SoundSource): Promise<void> => {
     source,
     volume: source.defaultVolume,
     isPlaying: false,
+    retryCount: 0,
   })
 }
 
@@ -102,6 +133,8 @@ export const play = (soundId: string): void => {
   if (!instance.isPlaying) {
     instance.howl.play()
     instance.isPlaying = true
+    instance.retryCount = 0
+    notifyStateChange(soundId, true)
   }
 }
 
@@ -117,6 +150,7 @@ export const stop = (soundId: string): void => {
   if (instance.isPlaying) {
     instance.howl.stop()
     instance.isPlaying = false
+    notifyStateChange(soundId, false)
   }
 }
 
@@ -174,10 +208,11 @@ export const fadeOut = (soundId: string, duration: number = 1000): void => {
  * すべての音源を停止する
  */
 export const stopAll = (): void => {
-  audioInstances.forEach((instance) => {
+  audioInstances.forEach((instance, id) => {
     if (instance.isPlaying) {
       instance.howl.stop()
       instance.isPlaying = false
+      notifyStateChange(id, false)
     }
   })
 }
@@ -323,6 +358,19 @@ export const getMemoryUsage = (): {
 }
 
 /**
+ * フォアグラウンド復帰時に再生状態を検証し、停止した音源を再開する
+ */
+export const resumeAllPlaying = (): void => {
+  audioInstances.forEach((instance, id) => {
+    if (instance.isPlaying && !instance.howl.playing()) {
+      console.log(`Resuming playback for ${id} after visibility change`)
+      instance.howl.play()
+      instance.retryCount = 0
+    }
+  })
+}
+
+/**
  * テスト用：すべての音源をクリアする
  */
 export const clearAll = (): void => {
@@ -330,4 +378,5 @@ export const clearAll = (): void => {
     instance.howl.unload()
   })
   audioInstances.clear()
+  stateChangeListeners.clear()
 }

@@ -4,6 +4,7 @@ import { useAudioStore } from './stores/audioStore'
 import { SOUND_SOURCES } from './data/sounds'
 import { SoundCard } from './components/SoundCard'
 import { PlayingCounter } from './components/PlayingCounter'
+import { useVisibilityResume } from './hooks/useVisibilityResume'
 import { AppLoadingScreen, PreloadStatus } from './components/LoadingStates'
 import { performanceMonitor } from './utils/pwaHelpers'
 
@@ -46,6 +47,9 @@ function App() {
     loadPresets,
     presets,
   } = useAudioStore()
+
+  // フォアグラウンド復帰時に停止した音源を自動再開
+  useVisibilityResume()
 
   const [isInitialLoading, setIsInitialLoading] = useState(true)
   const [loadedSoundsCount, setLoadedSoundsCount] = useState(0)
