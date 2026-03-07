@@ -358,6 +358,19 @@ export const getMemoryUsage = (): {
 }
 
 /**
+ * フォアグラウンド復帰時に再生状態を検証し、停止した音源を再開する
+ */
+export const resumeAllPlaying = (): void => {
+  audioInstances.forEach((instance, id) => {
+    if (instance.isPlaying && !instance.howl.playing()) {
+      console.log(`Resuming playback for ${id} after visibility change`)
+      instance.howl.play()
+      instance.retryCount = 0
+    }
+  })
+}
+
+/**
  * テスト用：すべての音源をクリアする
  */
 export const clearAll = (): void => {

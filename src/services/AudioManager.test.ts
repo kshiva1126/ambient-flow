@@ -40,6 +40,7 @@ const mockHowlInstance = {
   volume: vi.fn().mockReturnValue(0.5),
   fade: vi.fn(),
   unload: vi.fn(),
+  playing: vi.fn().mockReturnValue(true),
 }
 
 vi.mock('howler', () => ({
@@ -467,6 +468,46 @@ describe('AudioManager', () => {
 
       expect(mockHowlInstance.play).not.toHaveBeenCalled()
       expect(audioManager.isPlaying('retry-max-test')).toBe(false)
+    })
+  })
+
+  describe('resumeAllPlaying', () => {
+    it('should resume sounds that are marked as playing but actually stopped', async () => {
+      await audioManager.load(mockSoundSource)
+      audioManager.play(mockSoundSource.id)
+
+      // Howl.playing()がfalseを返す（実際は停止している）
+      mockHowlInstance.playing = vi.fn().mockReturnValue(false)
+      mockHowlInstance.play.mockClear()
+
+      audioManager.resumeAllPlaying()
+
+      expect(mockHowlInstance.play).toHaveBeenCalled()
+    })
+
+    it('should not restart sounds that are actually playing', async () => {
+      await audioManager.load(mockSoundSource)
+      audioManager.play(mockSoundSource.id)
+
+      // Howl.playing()がtrueを返す（実際に再生中）
+      mockHowlInstance.playing = vi.fn().mockReturnValue(true)
+      mockHowlInstance.play.mockClear()
+
+      audioManager.resumeAllPlaying()
+
+      expect(mockHowlInstance.play).not.toHaveBeenCalled()
+    })
+
+    it('should not resume sounds that are not marked as playing', async () => {
+      await audioManager.load(mockSoundSource)
+      // play()を呼ばない
+
+      mockHowlInstance.playing = vi.fn().mockReturnValue(false)
+      mockHowlInstance.play.mockClear()
+
+      audioManager.resumeAllPlaying()
+
+      expect(mockHowlInstance.play).not.toHaveBeenCalled()
     })
   })
 
